@@ -45,16 +45,13 @@ public class Main {
         System.out.println("writer 생성");
         writer = new BufferedWriter(new FileWriter(file,true));
         String line = null;
+        boolean dateNowExist = true;
         // Txt 파일 날짜 처리
         if ((line = reader.readLine()) != null) {
             dateNow = line;
             System.out.println("사용자가 마지막으로 입력한 날짜 : " + dateNow);
-        }
-        // Txt 파일 todoList 처리
-        int num = 1;
-        while((line = reader.readLine()) != null){
-            TodoList todo = createList(line);
-            todoMap.put(num++,todo);
+        }else{
+            System.out.println("설정된 날짜가 없습니다. 최초 오늘 날짜를 설정합니다.");
         }
 
         while(true){
@@ -63,12 +60,18 @@ public class Main {
             String today = sc.nextLine();
             if(isNumeric(today) && checkDateVaildation(today) && checkDateIsAfter(today)){
                 dateNow = formatDate(today);
-                System.out.println("변경된 오늘의 날짜 : " + dateNow);
+                System.out.println("오늘의 날짜 : " + dateNow);
                 break;
             }
         }
 
-        
+        // Txt 파일 todoList 처리
+        int num = 1;
+        while((line = reader.readLine()) != null){
+            TodoList todo = createList(line);
+            todoMap.put(num++,todo);
+        }
+
         // 저장된 할 일 목록을 출력
         System.out.println("todoList 프로그램을 시작합니다.\n\n\n");
         showList(todoMap);
@@ -375,6 +378,9 @@ public class Main {
     // 초기에 입력한 날짜보다 이전인지 확인하는 메소드
     public static boolean checkDateIsAfter(String date){
         LocalDate inputDate = stringToLocalDate(formatDate(date));
+        if(dateNow == null){
+            return true;
+        }
         LocalDate savedDate = stringToLocalDate(dateNow);
         if(inputDate.isBefore(savedDate)){
             System.out.println("사용자가 초기에 입력한 날짜보다 이전의 날짜는 허용되지않습니다.");
