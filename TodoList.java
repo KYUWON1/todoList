@@ -1,11 +1,13 @@
+import java.time.LocalDate;
+
 public class TodoList {
     private String title;
-    private String deadline;
+    private LocalDate deadline;
     private String createAt;
     private String updatedAt;
     private boolean isCheck;
 
-    public TodoList(String title, String deadline,boolean bool) {
+    public TodoList(String title, LocalDate deadline,boolean bool) {
         this.title = title;
         this.deadline = deadline;
         this.isCheck = bool;
@@ -19,11 +21,11 @@ public class TodoList {
         this.title = title;
     }
 
-    public String getDeadline() {
+    public LocalDate getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(String deadline) {
+    public void setDeadline(LocalDate deadline) {
         this.deadline = deadline;
     }
 

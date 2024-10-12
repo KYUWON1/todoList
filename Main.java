@@ -14,9 +14,10 @@ public class Main {
         2. 제목검색
         3. 검색을 위한 자료를 따로 ? 좋은것같다.
      */
-    static HashMap<Integer, TodoList> todoMap = new HashMap<>();
-    // 자료 검색용 List
+    // TodoList 저장용 자료구조
     static List<TodoList> todoList = new ArrayList<>();
+    // 검색 대비용 자료구조
+    static Map<String,List<Integer>> titleIndex = new HashMap<>();
     /*
         메인 프롬프트 
         1. 데이터 로딩 txt 파일 -> 이전에 입력한 날짜 및 Data Map 에 자료저장
@@ -76,8 +77,10 @@ public class Main {
         while((line = reader.readLine()) != null){
             TodoList todo = createList(line);
             todoList.add(todo);
-            todoMap.put(num++,todo);
         }
+        // 검색용 Map 초기화
+        initTitleIndex(todoList);
+        showTitleIndex();
 
         // 저장된 할 일 목록을 출력
         System.out.println("todoList 프로그램을 시작합니다.\n\n\n");
@@ -230,7 +233,7 @@ public class Main {
                             }
                             if (isNumeric(deadline) && checkDateVaildation(deadline) && checkDateIsAfter(deadline)) {
                                 deadline = formatDate(deadline);
-                                todo.setDeadline(deadline);
+                                todo.setDeadline(stringToLocalDate(deadline));
                                 System.out.println((idx + 1) + "번 할일의 마감일을 " + deadline + "으로 수정했습니다.");
                                 showList(todoList);
                                 return;
@@ -315,8 +318,35 @@ public class Main {
         String title = parts[0];
         String deadline = parts[1];
         boolean isCheck = "Y".equals(parts[2]);
-        return new TodoList(title, deadline, isCheck);
+        return new TodoList(title, stringToLocalDate(deadline), isCheck);
     }
+    // 검색용 Map 초기화 함수
+    public static void initTitleIndex(List<TodoList> todoList){
+        titleIndex.clear();
+        for (int i = 0; i < todoList.size(); i++) {
+            String title = todoList.get(i).getTitle().toLowerCase();
+            if(!titleIndex.containsKey(title)){
+                titleIndex.put(title,new ArrayList<>());
+            }
+            titleIndex.get(title).add(i);
+        }
+    }
+    // Map의 내용을 출력하는 메소드
+    public static void showTitleIndex() {
+        System.out.println("========== 제목 인덱스 목록 ==========");
+        for (Map.Entry<String, List<Integer>> entry : titleIndex.entrySet()) {
+            String title = entry.getKey();
+            List<Integer> indices = entry.getValue();
+
+            System.out.print("Title: " + title + " -> Indices: ");
+            for (int index : indices) {
+                System.out.print(index + " ");
+            }
+            System.out.println();
+        }
+        System.out.println("=====================================\n");
+    }
+
     // 리스트 보여주는 함수
     public static void showList(List<TodoList> list) {
         System.out.println("========== 할 일 목록 ==========");
