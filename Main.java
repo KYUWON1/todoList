@@ -8,8 +8,15 @@ public class Main {
     static BufferedReader reader;
     static BufferedWriter writer;
     static String dateNow;
+    /*
+        확장 대비 목록
+        1. 날짜검색
+        2. 제목검색
+        3. 검색을 위한 자료를 따로 ? 좋은것같다.
+     */
     static HashMap<Integer, TodoList> todoMap = new HashMap<>();
-    
+    // 자료 검색용 List
+    static List<TodoList> todoList = new ArrayList<>();
     /*
         메인 프롬프트 
         1. 데이터 로딩 txt 파일 -> 이전에 입력한 날짜 및 Data Map 에 자료저장
@@ -45,7 +52,6 @@ public class Main {
         System.out.println("writer 생성");
         writer = new BufferedWriter(new FileWriter(file,true));
         String line = null;
-        boolean dateNowExist = true;
         // Txt 파일 날짜 처리
         if ((line = reader.readLine()) != null) {
             dateNow = line;
@@ -69,12 +75,13 @@ public class Main {
         int num = 1;
         while((line = reader.readLine()) != null){
             TodoList todo = createList(line);
+            todoList.add(todo);
             todoMap.put(num++,todo);
         }
 
         // 저장된 할 일 목록을 출력
         System.out.println("todoList 프로그램을 시작합니다.\n\n\n");
-        showList(todoMap);
+        showList(todoList);
         String input = "";
         
         // 프로그램 시작
@@ -84,261 +91,239 @@ public class Main {
             System.out.println("종료를 원하시면 exit을 입력해주세요.");
             input = sc.nextLine();
             if(input.equals("a")){
-                addList(todoMap);
+                addList(todoList);
             }else if(input.equals("m")){
-                updateList(todoMap);
+                updateList(todoList);
             }else if(input.equals("d")){
-                deleteList(todoMap);   
+                deleteList(todoList);
             }else if(input.equals("c")){
-                checkList(todoMap);
+                checkList(todoList);
             }else if(input.equals("exit")){
                 break;
             }else{
                 System.out.println("잘못된 입력입니다.");
             }
         }
-        updateFile(todoMap);
+        updateFile(todoList);
         writer.close();
         reader.close();
     }
     // 할일 체크하기 메소드
-    private static void checkList(HashMap<Integer,TodoList> todoMap) {
+    private static void checkList(List<TodoList> todoList) {
         System.out.println("======== 할 일 체크 및 해제하기 ========");
         System.out.println("체크하고 싶은 할일의 번호를 입력해주세요.");
         String input;
-        while(true){
+        while (true) {
             System.out.println("번호를 입력해주세요.");
-            System.out.println("취소하고싶으면 c를 입력해주세요");
+            System.out.println("취소하고 싶으면 c를 입력해주세요");
             input = sc.nextLine();
-            if(input.equals("c")){
-                return;
-            }else if(!isNumeric(input)){
-               
-            }else{
+            if (input.equals("c")) {
+                System.out.println("메인으로 돌아갑니다.");
                 break;
+            } else if (isNumeric(input)) {
+                int idx = Integer.parseInt(input) - 1;
+                if (idx < 0 || idx >= todoList.size()) {
+                    System.out.println("잘못된 숫자를 입력하셨습니다.");
+                    showList(todoList);
+                    continue;
+                }
+                TodoList todo = todoList.get(idx);
+                boolean check = todo.isCheck();
+                if (check) {
+                    System.out.println((idx + 1) + "번 할일에 체크를 해제합니다.");
+                } else {
+                    System.out.println((idx + 1) + "번 할일에 체크합니다.");
+                }
+                todo.isCheck(!check);
+                showList(todoList);
+                return;
+            } else {
+                System.out.println("숫자를 입력해주세요.");
             }
         }
-        int idx = Integer.parseInt(input);
-        TodoList todo = todoMap.get(idx);
-        if(todo == null){
-            System.out.println("잘못된 숫자를 입력하셨습니다.");
-            showList(todoMap);
-            return;
-        }
-        boolean check = todo.isCheck();
-        if(check){
-            System.out.println(idx + "번 할일에 체크를 해제합니다.");
-            todo.isCheck(!check);
-        }else{
-            System.out.println(idx + "번 할일에 체크합니다.");
-            todo.isCheck(!check);
-        }
-        todoMap.put(idx,todo);
-        System.out.println("==============================\n");
-        showList(todoMap);
     }
     // 할일 추가하기 메소드
-    private static void addList(HashMap<Integer,TodoList> todoMap) {
-        while(true){
+    // fix: 마감일 입력받도록 수정
+    private static void addList(List<TodoList> todoList) {
+        while (true) {
             System.out.println("======== 할 일 추가하기 ========");
-            System.out.println("할일을 입력해주세요.");
+            System.out.println("할일을 입력해주세요(1~20자 내외)");
             System.out.println("취소하고 싶으면 c 를 입력해주세요.");
             String title = sc.nextLine();
-            if(title.equals("c")){
+            if (title.equals("c")) {
+                System.out.println("메인으로 돌아갑니다.");
                 break;
             }
-            if(!checkTitleLength(title)){
+            if (!checkTitleLength(title)) {
                 continue;
             }
-            System.out.println("마감일을 입력해주세요 (YYYYMMDD).");
-            System.out.println("마감일을 정하지않아도 됩니다."); // 데이터형식검증필요
-            String deadline = sc.nextLine();
-            if(deadline.equals("c")){
-                break;
-            }
-            if(isNumeric(deadline)){
-                if(checkDateVaildation(deadline) && checkDateIsAfter(deadline)){
-                    deadline = formatDate(deadline);
-                    int lastNum = todoMap.size()+1;
-                    // 기본은 체크 해제
-                    todoMap.put(lastNum,createList(title+"|"+deadline+"|N"));
-                    System.out.println("할일 : " + title +" 이 추가되었습니다.");
-                    System.out.println("==============================\n");
+            while (true) {
+                System.out.println("마감일을 입력해주세요 (YYYYMMDD).");
+                System.out.println("취소하려면 c 를 입력해주세요.");
+                String deadline = sc.nextLine();
+                if (deadline.equals("c")) {
+                    System.out.println("이전 단계로 돌아갑니다.");
+                    showList(todoList);
                     break;
                 }
+                if (isNumeric(deadline)) {
+                    if (checkDateVaildation(deadline) && checkDateIsAfter(deadline)) {
+                        deadline = formatDate(deadline);
+                        todoList.add(createList(title + "|" + deadline + "|N"));
+                        System.out.println("할일 : " + title + " 이 추가되었습니다.");
+                        System.out.println("==============================\n");
+                        showList(todoList);
+                        return;
+                    }
+                }
             }
         }
-        showList(todoMap);
+        showList(todoList);
     }
     // 할일 수정 메소드 (제목, 마감일)
-    public static void updateList(HashMap<Integer,TodoList> todoMap){
+    // fix : 취소시 이전단계로 돌아가도록 설정, deadline 검증 수정
+    public static void updateList(List<TodoList> todoList) {
         System.out.println("======== 할 일 수정하기 ========");
         String input;
-        while(true){
-            System.out.println("번호를 입력해주세요.");
-            System.out.println("취소하고싶으면 c를 입력해주세요");
+        while (true) {
+            System.out.println("수정할 할 일의 번호를 입력해주세요.");
+            System.out.println("취소하고 싶으면 c를 입력해주세요");
             input = sc.nextLine();
-            if(input.equals("c")){
+            if (input.equals("c")) {
+                System.out.println("메인으로 돌아갑니다.");
                 return;
-            }else if(!isNumeric(input)){
-
-            }else{
-                break;
-            }
-        }
-        int idx = (Integer.parseInt(input));
-        TodoList todoList = todoMap.get(idx);
-        if(todoList == null){
-            System.out.println("번호를 잘못 입력하셨습니다.");
-            showList(todoMap);
-            return;
-        }
-
-        while(true){
-            System.out.println("어떤 수정을 하실건가요?");
-            System.out.println("title,deadline 중 하나를 입력하시고, 취소를 원하시면 cancel 을" +
-                    " " +
-                    "입력해주세요.");
-            String aim = sc.nextLine();
-            if(aim.equals("title")){
-                System.out.println("수정할 제목을 작성해주세요.");
-                String title = sc.nextLine();
-                todoList.setTitle(title);
-                todoMap.put(idx,todoList);
-                System.out.println(idx + "번 할일의 제목을 " + title + " 로 수정했습니다.");
-                System.out.println("==============================\n");
-                break;
-            }else if(aim.equals("deadline")){
-                System.out.println("수정할 마감일을 입력해주세요 (YYYYMMDD).");
-                String deadline = sc.nextLine();
-                if(isNumeric(deadline)){
-                    if(checkDateVaildation(deadline) || checkDateIsAfter(deadline)){
-                        deadline = formatDate(deadline);
-                        todoList.setDeadline(deadline);
-                        todoMap.put(idx,todoList);
-                        System.out.println(idx + "번 할일의 마감일을 " + deadline +
-                                "으로 수정했습니다.");
-                        System.out.println("==============================\n");
-                        break;
-                    }
-                }else{
-                    System.out.println("잘못된 입력입니다.");
+            } else if (isNumeric(input)) {
+                int idx = Integer.parseInt(input) - 1;
+                if (idx < 0 || idx >= todoList.size()) {
+                    System.out.println("번호를 잘못 입력하셨습니다.");
+                    showList(todoList);
+                    continue;
                 }
-            }else if(aim.equals("cancel")){
-                System.out.println("수정을 취소하셨습니다.");
-                System.out.println("==============================\n");
-                return;
-            }else{
-                System.out.println("옳바르게 입력해주세요.");
+                TodoList todo = todoList.get(idx);
+                while (true) {
+                    System.out.println("어떤 수정을 하실건가요? title, deadline 중 하나를 입력하시고, 취소를 원하시면 c 를 입력해주세요.");
+                    String aim = sc.nextLine();
+                    if (aim.equals("title")) {
+                        while (true) {
+                            System.out.println("수정할 제목을 작성해주세요(1~20자 내외)");
+                            System.out.println("취소하려면 c 을 입력해주세요.");
+                            String title = sc.nextLine();
+                            if (title.equals("c")) {
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                break;
+                            }
+                            if (checkTitleLength(title)) {
+                                todo.setTitle(title);
+                                System.out.println((idx + 1) + "번 할일의 제목을 " + title + " 로 수정했습니다.");
+                                showList(todoList);
+                                return;
+                            }
+                        }
+                    } else if (aim.equals("deadline")) {
+                        while (true) {
+                            System.out.println("수정할 마감일을 입력해주세요 (YYYYMMDD).");
+                            System.out.println("취소하려면 c 를 입력해주세요.");
+                            String deadline = sc.nextLine();
+                            if (deadline.equals("c")) {
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                break;
+                            }
+                            if (isNumeric(deadline) && checkDateVaildation(deadline) && checkDateIsAfter(deadline)) {
+                                deadline = formatDate(deadline);
+                                todo.setDeadline(deadline);
+                                System.out.println((idx + 1) + "번 할일의 마감일을 " + deadline + "으로 수정했습니다.");
+                                showList(todoList);
+                                return;
+                            } else {
+                                System.out.println("잘못된 입력입니다.");
+                            }
+                        }
+                    } else if (aim.equals("c")) {
+                        System.out.println("이전 단계로 돌아갑니다.");
+                        showList(todoList);
+                        break;
+                    } else {
+                        System.out.println("올바르게 입력해주세요.");
+                    }
+                }
+            } else {
+                System.out.println("숫자를 입력해주세요.");
             }
         }
-
-        showList(todoMap);
     }
     // 할일 삭제 메소드
-    private static void deleteList(HashMap<Integer,TodoList> todoMap) {
+    // fix: 잘못 입력시 이전단계로 돌아가도록 설정, 번호 선택시 Y,N 밖에 없어서, 이전으로 돌아가는것은 추가하지않음
+    private static void deleteList(List<TodoList> todoList) {
         System.out.println("======== 할 일 삭제하기 ========");
-        showList(todoMap);
-        String input;
-        while(true){
+        showList(todoList);
+        while (true) {
             System.out.println("삭제하고 싶은 할일의 번호를 입력해주세요.");
             System.out.println("취소하고싶으면 c를 입력해주세요");
-            input = sc.nextLine();
-            if(input.equals("c")){
+            String input = sc.nextLine();
+            if (input.equals("c")) {
+                System.out.println("메인으로 돌아갑니다.");
                 return;
-            }else if(!isNumeric(input)){
-                
-            }else{
-                break;
+            } else if (isNumeric(input)) {
+                int idx = Integer.parseInt(input) - 1;
+                if (idx < 0 || idx >= todoList.size()) {
+                    System.out.println("잘못된 번호를 입력하셨습니다.");
+                    showList(todoList);
+                    continue;
+                }
+                TodoList todo = todoList.get(idx);
+                while (true) {
+                    System.out.println("정말로 " + (idx + 1) + " 번 todo를 삭제하시겠습니까?(Y/N)");
+                    String isDelete = sc.nextLine();
+                    if (isDelete.equals("N")) {
+                        System.out.println("이전 단계로 돌아갑니다.");
+                        break;
+                    } else if (isDelete.equals("Y")) {
+                        System.out.println((idx + 1) + "번 todo를 삭제합니다.");
+                        todoList.remove(idx);
+                        showList(todoList);
+                        return;
+                    } else {
+                        System.out.println("Y 또는 N을 입력해주세요");
+                    }
+                }
+            } else {
+                System.out.println("숫자를 입력해주세요.");
             }
         }
-        int idx = Integer.parseInt(input);
-        TodoList todo = todoMap.get(idx);
-        if(todo == null){
-            System.out.println("잘못된 번호를 입력하셨습니다.");
-            showList(todoMap);
-            return;
-        }
-
-        while(true){
-            System.out.println("정말로 "+idx+" 번 todo를 삭제하시겠습니까?(Y/N)");
-            String isDelete = sc.nextLine();
-            if(isDelete.equals("N")){
-                System.out.println("삭제를 취소하셨습니다. 메인으로 돌아갑니다.");
-                return;
-            }else if(isDelete.equals("Y")){
-                System.out.println(idx+"번 todo를 삭제합니다.");
-                break;
-            }else{
-                System.out.println("Y 또는 N을 입력해주세요");
-            }
-        }
-
-        // 번호 당기는 로직
-        for (int i = idx;i <= todoMap.size();i++){
-            if(todoMap.get(i + 1) != null){
-                todoMap.put(i,todoMap.get(i + 1));
-            }
-        }
-        todoMap.remove(todoMap.size());  // 마지막 항목 삭제
-        System.out.println("==============================\n");
-        showList(todoMap);
     }
     // 종료전에 만들어진 MAP을 통해서 FILE 재설정
-    private static void updateFile(HashMap<Integer,TodoList> todoMap) {
+    private static void updateFile(List<TodoList> todoList) {
         File file = new File("./data/file.txt");
         StringBuilder fileContent = new StringBuilder();
-        String line = dateNow;
-        fileContent.append(line).append(System.lineSeparator());
-        String check = "";
-        for (Map.Entry<Integer, TodoList> entrySet : todoMap.entrySet()) {
-            TodoList todo = entrySet.getValue();
-            if(todo.isCheck()){
-                check = "Y";
-            }else{
-                check = "N";
-            }
-            line = todo.getTitle() + "|" + todo.getDeadline() + "|" + check;
+        fileContent.append(dateNow).append(System.lineSeparator());
+        for (TodoList todo : todoList) {
+            String check = todo.isCheck() ? "Y" : "N";
+            String line = todo.getTitle() + "|" + todo.getDeadline() + "|" + check;
             fileContent.append(line).append(System.lineSeparator());
         }
 
-        // 업데이트된 내용을 파일에 다시 쓰기
-        try (BufferedWriter fileWriter =
-                     new BufferedWriter(new FileWriter(file, false))) {
+        try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(file, false))) {
             fileWriter.write(fileContent.toString());
-            fileWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("todoList File 업데이트 완료");
     }
     // txt 파일을 불러와서 List 생성
-    public static TodoList createList(String text){
+    public static TodoList createList(String text) {
         String[] parts = text.split("\\|");
         String title = parts[0];
         String deadline = parts[1];
-        String isCheck = parts[2];
-        boolean bool;
-        if(isCheck.equals("Y")){
-            bool = true;
-        }else if(isCheck.equals("N")){
-            bool = false;
-        }else{
-            bool = true;
-        }
-        return new TodoList(title,deadline,bool);
+        boolean isCheck = "Y".equals(parts[2]);
+        return new TodoList(title, deadline, isCheck);
     }
     // 리스트 보여주는 함수
-    public static void showList(Map<Integer,TodoList> list){
+    public static void showList(List<TodoList> list) {
         System.out.println("========== 할 일 목록 ==========");
-        String isCheck = "";
-        for (Map.Entry<Integer, TodoList> entry : list.entrySet()) {
-            if(entry.getValue().isCheck()){
-                isCheck = " [v]";
-            }else{
-                isCheck = " [ ]";
-            }
-            System.out.println(entry.getKey() + ". title:" + entry.getValue().getTitle()+" deadline:"+entry.getValue().getDeadline() + isCheck);
+        for (int i = 0; i < list.size(); i++) {
+            TodoList todo = list.get(i);
+            String isCheck = todo.isCheck() ? " [v]" : " [ ]";
+            System.out.println((i + 1) + ". title: " + todo.getTitle() + " deadline: " + todo.getDeadline() + isCheck);
         }
         System.out.println("==============================\n");
     }
@@ -389,8 +374,9 @@ public class Main {
         return true;
     }
     // 제목의 길이가 1~20 사이인지 확인하는 메소드
+    // fix 1. 공백 입력 불가하도록 수정
     public static boolean checkTitleLength(String title){
-        if(title.length() < 1 || title.length() > 20){
+        if(title.trim().length() < 1 || title.length() > 20){
             System.out.println("제목의 이름은 1~20자 사이입니다.");
             return false;
         }
