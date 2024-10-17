@@ -313,13 +313,36 @@ public class TodoListManager {
                     continue;
                 }
                 TodoList todo = todoList.get(idx);
+                LocalDate nowDate = inputManager.stringToLocalDate(dateNow);
+                LocalTime nowTime = inputManager.stringToLocalTime(timeNow);
+
+                // 체크 시작일/시간 검사
+                if (todo.isCanCheckAfterCheckStartDate()) {
+                    LocalDate todoDate = todo.getCheckStartDate();
+                    LocalTime todoTime = todo.getCheckStartTime();
+                    if (nowDate.isBefore(todoDate) || (nowDate.isEqual(todoDate) && nowTime.isBefore(todoTime))) {
+                        System.out.println("아직 체크 가능 기간이 아닙니다.");
+                        return;
+                    }
+                }
+
+                // 마감일/시간 검사
+                if (todo.isHasDeadline() && !todo.isCanCheckAfterDeadline()) {
+                    LocalDate todoDate = todo.getDeadline();
+                    LocalTime todoTime = todo.getDeadTime();
+                    if (nowDate.isAfter(todoDate) || (nowDate.isEqual(todoDate) && nowTime.isAfter(todoTime))) {
+                        System.out.println("체크 가능한 기간이 지났습니다.");
+                        return;
+                    }
+                }
+
                 boolean check = todo.isCheck();
                 if (check) {
                     System.out.println((idx + 1) + "번 할일에 체크를 해제합니다.");
                 } else {
                     System.out.println((idx + 1) + "번 할일에 체크합니다.");
                 }
-                todo.isCheck(!check);
+                todo.setCheck(!check); // 체크 상태 반전
                 showList(todoList);
                 return;
             } else {
@@ -327,6 +350,7 @@ public class TodoListManager {
             }
         }
     }
+
     // 할일 삭제 메소드
     // fix: 잘못 입력시 이전단계로 돌아가도록 설정, 번호 선택시 Y,N 밖에 없어서, 이전으로 돌아가는것은 추가하지않음
     public void deleteList(List<TodoList> todoList) {
