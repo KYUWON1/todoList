@@ -109,7 +109,7 @@ public class TodoListManager {
                         }
                         // 마감기한 o, 체크 가능 시작일 o, 마감일 이후 체크 o
                         else{
-                            todoList.add(TodoList.titleAndDeadlineAndStartDayCANT(title,deadlineDate,deadlineTime,startDate,startTime));
+                            todoList.add(TodoList.titleAndDeadlineAndStartDayCAN(title,deadlineDate,deadlineTime,startDate,startTime));
                             showList(todoList);
                             return;
                         }

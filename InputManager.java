@@ -13,6 +13,12 @@ public class InputManager {
     // 시간 유효성 검증
     public boolean checkTimeInput(String time,String timeNow,LocalDate today,
                                   String dateNow){
+        // 이전 설정 날짜가 없으면 true
+        if(dateNow == null){
+            if(isNumeric(time) && checkTimeValidation(time)){
+                return true;
+            }
+        }
         if(isNumeric(time) && checkTimeValidation(time) && checkTimeIsAfter(time,timeNow,today,dateNow)){
             return true;
         }

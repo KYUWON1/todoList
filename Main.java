@@ -59,9 +59,11 @@ public class Main {
         // Txt 파일 날짜 처리
         if ((line = reader.readLine()) != null) {
             String[] dateAndTime = line.split("\\|");
-            dateNow = dateAndTime[0];
-            timeNow = dateAndTime[1];
-            System.out.println("사용자가 마지막으로 입력한 날짜와 시간 :" + dateNow+"일 "+timeNow);
+            if(dateAndTime.length == 2){
+                dateNow = dateAndTime[0];
+                timeNow = dateAndTime[1];
+                System.out.println("사용자가 마지막으로 입력한 날짜와 시간 :" + dateNow+"일 "+timeNow);
+            }
         }else{
             System.out.println("설정된 날짜가 없습니다. 최초 오늘 날짜를 설정합니다.");
         }
