@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -50,11 +51,11 @@ public class Main {
         }
         // InputManager 생성
         InputManager inputManager = new InputManager();
-        // reader,writer 초기화 및 기존 list 맵에 추가
+        // BufferedReader와 BufferedWriter 초기화 시 UTF-8 인코딩 명시
         System.out.println("reader 생성");
-        reader = new BufferedReader(new FileReader(file));
+        reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
         System.out.println("writer 생성");
-        writer = new BufferedWriter(new FileWriter(file,true));
+        writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8));
         String line = null;
         // Txt 파일 날짜 처리
         if ((line = reader.readLine()) != null) {
@@ -129,15 +130,14 @@ public class Main {
         writer.close();
         reader.close();
     }
-    // 종료전에 만들어진 MAP을 통해서 FILE 재설정
+    // 종료 전에 만들어진 MAP을 통해서 FILE 재설정 - updateFile 메소드 수정
     private static void updateFile(List<TodoList> todoList) {
         File file = new File("./data/file.txt");
         StringBuilder fileContent = new StringBuilder();
         fileContent.append(dateNow).append("|").append(timeNow).append(System.lineSeparator());
         for (TodoList todo : todoList) {
             String check = todo.isCheck() ? "Y" : "N";
-            String checkAfterDeadline = todo.isCanCheckAfterDeadline() ? "Y":
-                    "N";
+            String checkAfterDeadline = todo.isCanCheckAfterDeadline() ? "Y" : "N";
             String line = todo.getTitle() + "|"
                     + (todo.getDeadline() != null ? todo.getDeadline() : "") + "|"
                     + (todo.getDeadTime() != null ? todo.getDeadTime() : "") + "|"
@@ -148,7 +148,7 @@ public class Main {
             fileContent.append(line).append(System.lineSeparator());
         }
 
-        try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter(file, false))) {
+        try (BufferedWriter fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8))) {
             fileWriter.write(fileContent.toString());
         } catch (IOException e) {
             e.printStackTrace();
