@@ -52,9 +52,9 @@ public class Main {
         // InputManager 생성
         InputManager inputManager = new InputManager();
         // BufferedReader와 BufferedWriter 초기화 시 UTF-8 인코딩 명시
-        System.out.println("reader 생성");
+        System.out.println("File Reader 생성");
         reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-        System.out.println("writer 생성");
+        System.out.println("File Writer 생성");
         writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true), StandardCharsets.UTF_8));
         String line = null;
         // Txt 파일 날짜 처리
@@ -95,8 +95,8 @@ public class Main {
             todoList.add(todo);
         }
         // 검색용 Map 초기화
-        initTitleIndex(todoList);
-        showTitleIndex();
+//        initTitleIndex(todoList);
+//        showTitleIndex();
 
         // 저장된 할 일 목록을 출력
         System.out.println("todoList 프로그램을 시작합니다.\n\n\n");
@@ -255,9 +255,5 @@ public class Main {
     public static LocalTime stringToLocalTime(String time){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         return LocalTime.parse(time,formatter);
-    }
-    public static String LocalDateToString(String date){
-        String[] strr = date.split(":");
-        return strr[0] + strr[1];
     }
 }
