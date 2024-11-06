@@ -27,7 +27,7 @@ public class TodoListManager {
     public void addList(List<TodoList> todoList) {
         String title;
         outerLoop1: while(true) {
-            title = getTitle();
+            title = getTitle("추가");
             if (title == null) {
                 return;
             }
@@ -147,7 +147,7 @@ public class TodoListManager {
                         continue outerLoop1;
                     }
                     else if(aim.equals("title")){
-                        String title = getTitle();
+                        String title = getTitle("수정");
                         if(title == null){
                             System.out.println("이전 단계로 돌아갑니다.");
                             continue outerLoop2;
@@ -414,9 +414,9 @@ public class TodoListManager {
         System.out.println("==============================\n");
     }
     // 제목 입력받기
-    private String getTitle() {
+    private String getTitle(String type) {
         while (true) {
-            System.out.println("======== 할 일 추가하기 ========");
+            System.out.println("======== 할 일 "+type+"하기 ========");
             System.out.println("할일을 입력해주세요(1~20자 내외)");
             System.out.println("취소하고 싶으면 c 를 입력해주세요.");
             String title = sc.nextLine();
