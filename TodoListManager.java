@@ -1,10 +1,14 @@
-import com.sun.security.jgss.GSSUtil;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Scanner;
-
+// 프로그램이 시작될때 원래 날짜를 입력받음, 마감기한 체크기능있었음
+// 마감기한을 입력할떄 마감기한이 현재 날짜보다 이전일수는 없음. 
+// 처음 프로그램이 시작할때 입력하는 현재 날짜에는 규칙? 문법에 맞고 범위제한만 맞으면 맞는걸로 쳤었음, 마지막 입력한거보다 이전은 안됨
+// 프로그램을 현재 날짜로 알려주고 시작했는데, 이미 지난 리스트에 대해서는 체크가 가능했음. 근데 요구사항 1차 이후엔 문제가 발생할수있음
+// 현재 날짜 입력 규칙에 이제는 추가된 규칙이 있어야하지 않을까? ... 네..
+// 체크 가능 시작일이 있는 리스트에 대해서 체크가 되어있다면, 처음에 시간을 입력할때, 리스트를 훑어서 그것보다 이전에는 뭐 불가하게
+// 해야한다는데, 이미 프로그램 설정상 되어있어서 문제 x
 public class TodoListManager {
     private Scanner sc;
     private String dateNow;
@@ -64,7 +68,6 @@ public class TodoListManager {
                     }
 
                 }
-                // 마감기한 o
                 else{
                     deadlineDate = getDeadlineDate("마감날짜");
                     if(deadlineDate == null){
@@ -93,13 +96,25 @@ public class TodoListManager {
                     }
                     // 마감기한 o, 체크 가능 시작일 o
                     else{
+                        // 마감기한 o
                         startDate = getDeadlineDate("시작날짜");
                         if(startDate == null){
                             continue outerLoop2;
                         }
+                        if(startDate.isAfter(deadlineDate)){
+                            if(!getConfirm("체크 가능 시작시점이 마감일보다 이후입니다.")){
+                                continue outerLoop2;
+                            }
+                        }
+
                         startTime = getDeadlineTime(startDate,"시작시간");
                         if(startTime == null){
                             continue outerLoop2;
+                        }
+                        if(startDate.isEqual(deadlineDate) && startTime.isAfter(deadlineTime)){
+                            if(!getConfirm("체크 가능 시작시점이 마감시간보다 이후입니다.")){
+                                continue outerLoop2;
+                            }
                         }
                         // 마감기한 o, 체크 가능 시작일 o, 마감일 이후 체크 x
                         if(!getConfirm("마감일 이후 체크를 가능하도록")){
@@ -170,10 +185,22 @@ public class TodoListManager {
                             if(newdeadline == null){
                                 continue outerLoop2;
                             }
+                            LocalDate checkStartDate = todo.getCheckStartDate();
+                            if(checkStartDate != null && newdeadline.isBefore(checkStartDate)){
+                                if(!getConfirm("마감날짜가 체크 가능 시작일보다 이전입니다.")){
+                                    continue outerLoop2;
+                                }
+                            }
                             LocalTime newdeadtime =
                                     getDeadlineTime(newdeadline,"마감시간");
                             if(newdeadtime == null){
                                 continue outerLoop2;
+                            }
+                            LocalTime checkStartTime = todo.getCheckStartTime();
+                            if(checkStartTime != null && newdeadline.equals(checkStartDate) && newdeadtime.isBefore(checkStartTime)){
+                                if(!getConfirm("마감시간이 체크 가능 시간보다 이전입니다.")){
+                                    continue outerLoop2;
+                                }
                             }
                             if(!getConfirm("마감일 이후 체크를 가능하도록")){
                                 todo.setDeadline(newdeadline);
@@ -212,10 +239,22 @@ public class TodoListManager {
                                 if(newdeadline == null){
                                     continue outerLoop2;
                                 }
+                                LocalDate checkStartDate = todo.getCheckStartDate();
+                                if(checkStartDate != null && newdeadline.isBefore(checkStartDate)){
+                                    if(!getConfirm("마감날짜가 체크 가능 시작일보다 이전입니다.")){
+                                        continue outerLoop2;
+                                    }
+                                }
                                 LocalTime newdeadtime =
                                         getDeadlineTime(newdeadline,"마감시간");
                                 if(newdeadtime == null){
                                     continue outerLoop2;
+                                }
+                                LocalTime checkStartTime = todo.getCheckStartTime();
+                                if(checkStartTime != null && newdeadline.equals(checkStartDate) && newdeadtime.isBefore(checkStartTime)){
+                                    if(!getConfirm("마감시간이 체크 가능 시간보다 이전입니다.")){
+                                        continue outerLoop2;
+                                    }
                                 }
                                 if(!getConfirm("마감일 이후 체크를 가능하도록")){
                                     todo.setDeadline(newdeadline);
@@ -243,10 +282,22 @@ public class TodoListManager {
                             if(startDate == null){
                                 continue outerLoop2;
                             }
+                            LocalDate deadline = todo.getDeadline();
+                            if(deadline != null && startDate.isAfter(deadline)){
+                                if(!getConfirm("체크 가능 시작일이 마감일보다 이후입니다.")){
+                                    continue outerLoop2;
+                                }
+                            }
                             LocalTime startTime = getDeadlineTime(startDate,
                                     "시작시간");
                             if (startTime == null) {
                                 continue outerLoop2;
+                            }
+                            LocalTime deadTime = todo.getDeadTime();
+                            if(deadTime != null && startDate.isEqual(deadline) && startTime.isAfter(deadTime)){
+                                if(!getConfirm("체크 가능 시작시간이 마감시간보다 이후입니다.")){
+                                    continue outerLoop2;
+                                }
                             }
                             todo.setCheckStartDate(startDate);
                             todo.setCheckStartTime(startTime);
@@ -277,10 +328,22 @@ public class TodoListManager {
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
+                                LocalDate deadline = todo.getDeadline();
+                                if(deadline != null && startDate.isAfter(deadline)){
+                                    if(!getConfirm("체크 가능 시작일이 마감일보다 이후입니다.")){
+                                        continue outerLoop2;
+                                    }
+                                }
                                 LocalTime startTime =
                                         getDeadlineTime(startDate,"시작시간");
                                 if (startTime == null) {
                                     continue outerLoop2;
+                                }
+                                LocalTime deadTime = todo.getDeadTime();
+                                if(deadTime != null && startDate.isEqual(deadline) && startTime.isAfter(deadTime)){
+                                    if(!getConfirm("체크 가능 시작시간이 마감시간보다 이후입니다.")){
+                                        continue outerLoop2;
+                                    }
                                 }
                                 todo.setCheckStartDate(startDate);
                                 todo.setCheckStartTime(startTime);

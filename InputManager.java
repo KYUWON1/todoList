@@ -49,7 +49,7 @@ public class InputManager {
         return true;
     }
     // 초기에 입력한 날짜보다 이전인지 확인하는 메소드
-    public boolean checkDateIsAfter(String date,String dateNow){
+    public boolean  checkDateIsAfter(String date,String dateNow){
         LocalDate inputDate = stringToLocalDate(formatDate(date));
         if(dateNow == null){
             return true;

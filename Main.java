@@ -29,7 +29,8 @@ public class Main {
         4. exit 입력 시, Map에 저장된 자료들 txt파일에 저장, 오늘의 날짜 업데이트 YYYY-MM-DD 형식
         5. 파일 close
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException
+    {
         // 폴더 생성
         File dir = new File("./data");
         if(!dir.exists()){
@@ -82,7 +83,8 @@ public class Main {
         while(true){
             System.out.println("현재 시간을 입력해주세요.(HHMM): ");
             String time = sc.nextLine();
-            if(inputManager.checkTimeInput(time,timeNow,stringToLocalDate(dateNow),beforeDate)){
+            if(inputManager.checkTimeInput(time,timeNow,
+                    stringToLocalDate(dateNow),beforeDate)){
                 timeNow = inputManager.formatTime(time);
                 System.out.println("오늘의 시간 : " + timeNow);
                 break;
@@ -108,6 +110,7 @@ public class Main {
         String input = "";
         // 프로그램 시작
         while(true){
+            todoListManager.showList(todoList);
             System.out.println("원하는 서비스의 명령어를 입력해주세요.\na : 리스트 추가하기\nm : 리스트" +
                     " 수정하기\nd : 리스트 삭제\nc : 리스트 체크 및 해제");
             System.out.println("종료를 원하시면 exit을 입력해주세요.");
