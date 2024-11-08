@@ -19,6 +19,7 @@ public class Main {
      */
     // TodoList 저장용 자료구조
     static List<TodoList> todoList = new ArrayList<>();
+
     // 검색 대비용 자료구조
     static Map<String,List<Integer>> titleIndex = new HashMap<>();
     /*
