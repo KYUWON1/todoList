@@ -2,22 +2,16 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Scanner;
-// 프로그램이 시작될때 원래 날짜를 입력받음, 마감기한 체크기능있었음
-// 마감기한을 입력할떄 마감기한이 현재 날짜보다 이전일수는 없음. 
-// 처음 프로그램이 시작할때 입력하는 현재 날짜에는 규칙? 문법에 맞고 범위제한만 맞으면 맞는걸로 쳤었음, 마지막 입력한거보다 이전은 안됨
-// 프로그램을 현재 날짜로 알려주고 시작했는데, 이미 지난 리스트에 대해서는 체크가 가능했음. 근데 요구사항 1차 이후엔 문제가 발생할수있음
-// 현재 날짜 입력 규칙에 이제는 추가된 규칙이 있어야하지 않을까? ... 네..
-// 체크 가능 시작일이 있는 리스트에 대해서 체크가 되어있다면, 처음에 시간을 입력할때, 리스트를 훑어서 그것보다 이전에는 뭐 불가하게
-// 해야한다는데, 이미 프로그램 설정상 되어있어서 문제 x
+
 public class TodoListManager {
     private Scanner sc;
-    private String dateNow;
-    private String timeNow;
+    private LocalDate dateNow;
+    private LocalTime timeNow;
     private InputManager inputManager;
     private List<TodoList> todoList;
 
-    public TodoListManager(Scanner sc, String dateNow,
-                           String timeNow,
+    public TodoListManager(Scanner sc, LocalDate dateNow,
+                           LocalTime timeNow,
                            List<TodoList> todoList,
                            InputManager inputManager) {
         this.sc = sc;
@@ -41,90 +35,233 @@ public class TodoListManager {
             LocalTime startTime;
 
             outerLoop2: while(true){
-                // 마감기한 x
-                if(!getConfirm("마감기한을")){
-                    // 마김가한 x, 체크 가능 시작일 x
-                    outerLoop3: while(true){
-                        if(!getConfirm("체크 가능 시작시점을")){
-                            todoList.add(TodoList.onlyTitle(title));
+                if(getConfirm("바쁨할일로")){
+                    if(getConfirm("마감기한을")){
+                        deadlineDate = getDeadlineDate("마감일을",dateNow);
+                        if(deadlineDate == null){
+                            System.out.println("이전 단계로 돌아갑니다.");
+                            continue outerLoop2;
+                        }
+                        deadlineTime = getDeadlineTime(deadlineDate,dateNow,
+                                timeNow,
+                                "마감시간을");
+                        if(deadlineTime == null){
+                            System.out.println("이전 단계로 돌아갑니다.");
+                            continue outerLoop2;
+                        }
+                        if(!canCreateBusyJob(deadlineDate,deadlineTime)){
+                            System.out.println("바쁨 할일을 생성할수없습니다.");
+                            continue outerLoop2;
+                        }
+                        if(getConfirm("마감일 이후 체크를 가능하도록")){
+                            if(getConfirm("체크 가능 시작시점을")) {
+                                // 바쁨할일 o, 마감기한 o, 마감체크 o, 체크시작 o
+                                startDate = getDeadlineDate("시작날짜",deadlineDate);
+                                // 반환 타입은 local 타입
+                                if(startDate == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                startTime = getDeadlineTime(startDate,
+                                        deadlineDate,
+                                        deadlineTime,"시작시간");
+                                if(startTime == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                TodoList list = TodoList.titleAndDeadlineAndStartDayCAN(
+                                        title, deadlineDate, deadlineTime,
+                                        startDate, startTime
+                                );
+                                list.setBusy(BusyType.BUSY_Y);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
+                            }else{
+                                // 바쁨할일 o, 마감기한 o, 마감체크 o, 체크시작 x
+                                TodoList list = TodoList.titleAndDeadlineCAN(
+                                        title, deadlineDate, deadlineTime
+                                );
+                                list.setBusy(BusyType.BUSY_Y);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
+                            }
+                        }else{
+                            if(getConfirm("체크 가능 시작시점을")) {
+                                // 바쁨할일 o, 마감기한 o, 마감체크 x, 체크시작 o
+                                startDate = getDeadlineDate("시작날짜",deadlineDate);
+                                if(startDate == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                startTime = getDeadlineTime(startDate,
+                                        deadlineDate,deadlineTime,
+                                        "시작시간");
+                                if(startTime == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                TodoList list = TodoList.titleAndDeadlineAndStartDayCANT(
+                                        title, deadlineDate, deadlineTime,
+                                        startDate, startTime
+                                );
+                                list.setBusy(BusyType.BUSY_Y);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
+                            }else{
+                                // 바쁨할일 o, 마감기한 o, 마감체크 x, 체크시작 x
+                                TodoList list = TodoList.titleAndDeadlineCANT(
+                                        title, deadlineDate, deadlineTime
+                                );
+                                list.setBusy(BusyType.BUSY_Y);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
+                            }
+                        }
+                    }else{
+                        if(getConfirm("체크 가능 시작시점을")) {
+                            // 바쁨할일 o, 마감기한 x, 마감체크 x, 체크시작 o
+                            startDate = getDeadlineDate("시작날짜",dateNow);
+                            if(startDate == null){
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                continue outerLoop2;
+                            }
+                            startTime = getDeadlineTime(startDate,
+                                    dateNow,timeNow,"시작시간");
+                            if(startTime == null){
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                continue outerLoop2;
+                            }
+                            TodoList list = TodoList.titleAndCheckStartDate(
+                                    title, startDate, startTime
+                            );
+                            list.setBusy(BusyType.BUSY_Y);
+                            todoList.add(list);
                             showList(todoList);
                             return;
-                        }
-                        // 마감기한 x, 체크 가능 시작일 o
-                        else{
-                            startDate = getDeadlineDate("시작날짜");
-                            if(startDate == null){
-                                continue outerLoop2;
-                            }
-                            startTime = getDeadlineTime(startDate,"시작시간");
-                            if(startTime == null){
-                                continue outerLoop2;
-                            }
-                            todoList.add(TodoList.titleAndCheckStartDate(title,
-                                    startDate,startTime));
+                        }else{
+                            // 바쁨할일 o, 마감기한 x, 마감체크 x, 체크시작 x
+                            TodoList list = TodoList.onlyTitle(title);
+                            list.setBusy(BusyType.BUSY_Y);
+                            todoList.add(list);
                             showList(todoList);
                             return;
                         }
                     }
-
                 }
                 else{
-                    deadlineDate = getDeadlineDate("마감날짜");
-                    if(deadlineDate == null){
-                        continue outerLoop1;
-                    }
-                    deadlineTime = getDeadlineTime(deadlineDate,"마감시간");
-                    if(deadlineTime == null){
-                        continue outerLoop1;
-                    }
-                    // 마감기한 o, 체크 가능 시작일 x
-                    if(!getConfirm("체크 가능 시작시점을")){
-                        // 마감기한 o, 체크 가능 시작일 x, 마감일 이후 체크 x
-                        if(!getConfirm("마감일 이후 체크를 가능하도록")){
-                            todoList.add(TodoList.titleAndDeadlineCANT(title,
-                                    deadlineDate,deadlineTime));
-                            showList(todoList);
-                            return;
-                        }
-                        // 마감기한 o, 체크 가능 시작일 x, 마감일 이후 체크 o
-                        else{
-                            todoList.add(TodoList.titleAndDeadlineCAN(title,
-                                    deadlineDate,deadlineTime));
-                            showList(todoList);
-                            return;
-                        }
-                    }
-                    // 마감기한 o, 체크 가능 시작일 o
-                    else{
-                        // 마감기한 o
-                        startDate = getDeadlineDate("시작날짜");
-                        if(startDate == null){
+                    if(getConfirm("마감기한을")){
+                        deadlineDate = getDeadlineDate("마감일을",dateNow);
+                        if(deadlineDate == null){
+                            System.out.println("이전 단계로 돌아갑니다.");
                             continue outerLoop2;
                         }
-                        if(startDate.isAfter(deadlineDate)){
-                            if(!getConfirm("체크 가능 시작시점이 마감일보다 이후입니다.")){
-                                continue outerLoop2;
-                            }
+                        deadlineTime = getDeadlineTime(deadlineDate,dateNow,
+                                timeNow,
+                                "마감시간을");
+                        if(deadlineTime == null){
+                            System.out.println("이전 단계로 돌아갑니다.");
+                            continue outerLoop2;
                         }
+                        if(!canCreateNormalJob(deadlineDate,deadlineTime)){
+                            System.out.println("일반 할일을 생성할 수 없습니다.");
+                            continue outerLoop2;
+                        }
+                        if(getConfirm("마감일 이후 체크를 가능하도록")){
+                            if(getConfirm("체크 가능 시작시점을")) {
+                                // 바쁨할일 x, 마감기한 o, 마감체크 o, 체크시작 o
+                                startDate = getDeadlineDate("시작날짜",deadlineDate);
+                                if(startDate == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                startTime = getDeadlineTime(startDate,
+                                        deadlineDate,deadlineTime,"시작시간");
+                                if(startTime == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                TodoList list = TodoList.titleAndDeadlineAndStartDayCAN(
+                                        title, deadlineDate, deadlineTime,
+                                        startDate, startTime
+                                );
+                                list.setBusy(BusyType.BUSY_N);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
+                            }else{
+                                // 바쁨할일 x, 마감기한 o, 마감체크 o, 체크시작 x
+                                TodoList list = TodoList.titleAndDeadlineCAN(
+                                        title, deadlineDate, deadlineTime
+                                );
+                                list.setBusy(BusyType.BUSY_N);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
+                            }
+                        }else{
+                            if(getConfirm("체크 가능 시작시점을")) {
+                                // 바쁨할일 x, 마감기한 o, 마감체크 x, 체크시작 o
+                                startDate = getDeadlineDate("시작날짜",deadlineDate);
+                                if(startDate == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                startTime = getDeadlineTime(startDate,
+                                        deadlineDate,deadlineTime,"시작시간");
+                                if(startTime == null){
+                                    System.out.println("이전 단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                TodoList list = TodoList.titleAndDeadlineAndStartDayCANT(
+                                        title, deadlineDate, deadlineTime, startDate, startTime
 
-                        startTime = getDeadlineTime(startDate,"시작시간");
-                        if(startTime == null){
-                            continue outerLoop2;
-                        }
-                        if(startDate.isEqual(deadlineDate) && startTime.isAfter(deadlineTime)){
-                            if(!getConfirm("체크 가능 시작시점이 마감시간보다 이후입니다.")){
-                                continue outerLoop2;
+                                );
+                                list.setBusy(BusyType.BUSY_N);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
+                            }else{
+                                // 바쁨할일 x, 마감기한 o, 마감체크 x, 체크시작 x
+                                TodoList list = TodoList.titleAndDeadlineCANT(
+                                        title, deadlineDate, deadlineTime
+                                );
+                                list.setBusy(BusyType.BUSY_N);
+                                todoList.add(list);
+                                showList(todoList);
+                                return;
                             }
                         }
-                        // 마감기한 o, 체크 가능 시작일 o, 마감일 이후 체크 x
-                        if(!getConfirm("마감일 이후 체크를 가능하도록")){
-                            todoList.add(TodoList.titleAndDeadlineAndStartDayCANT(title,deadlineDate,deadlineTime,startDate,startTime));
+                    }else{
+                        if(getConfirm("체크 가능 시작시점을")) {
+                            // 바쁨할일 x, 마감기한 x, 마감체크 x, 체크시작 o
+                            startDate = getDeadlineDate("시작날짜",dateNow);
+                            if(startDate == null){
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                continue outerLoop2;
+                            }
+                            startTime = getDeadlineTime(startDate,dateNow,
+                                    timeNow,
+                                    "시작시간");
+                            if(startTime == null){
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                continue outerLoop2;
+                            }
+                            TodoList list = TodoList.titleAndCheckStartDate(
+                                    title, startDate, startTime
+                            );
+                            list.setBusy(BusyType.BUSY_N);
+                            todoList.add(list);
                             showList(todoList);
                             return;
-                        }
-                        // 마감기한 o, 체크 가능 시작일 o, 마감일 이후 체크 o
-                        else{
-                            todoList.add(TodoList.titleAndDeadlineAndStartDayCAN(title,deadlineDate,deadlineTime,startDate,startTime));
+                        }else{
+                            // 바쁨할일 x, 마감기한 x, 마감체크 x, 체크시작 x
+                            TodoList list = TodoList.onlyTitle(title);
+                            list.setBusy(BusyType.BUSY_N);
+                            todoList.add(list);
                             showList(todoList);
                             return;
                         }
@@ -181,7 +318,7 @@ public class TodoListManager {
                                 System.out.println("이전 단계로 돌아갑니다.");
                                 continue outerLoop2;
                             }
-                            LocalDate newdeadline = getDeadlineDate("마감날짜");
+                            LocalDate newdeadline = getDeadlineDate("마감날짜",dateNow);
                             if(newdeadline == null){
                                 continue outerLoop2;
                             }
@@ -192,7 +329,8 @@ public class TodoListManager {
                                 }
                             }
                             LocalTime newdeadtime =
-                                    getDeadlineTime(newdeadline,"마감시간");
+                                    getDeadlineTime(newdeadline,dateNow,timeNow,
+                                            "마감시간");
                             if(newdeadtime == null){
                                 continue outerLoop2;
                             }
@@ -235,7 +373,8 @@ public class TodoListManager {
                                 return;
                             }else{
                                 System.out.println("마감일을 수정합니다.");
-                                LocalDate newdeadline = getDeadlineDate("마감날짜");
+                                LocalDate newdeadline = getDeadlineDate(
+                                        "마감날짜",dateNow);
                                 if(newdeadline == null){
                                     continue outerLoop2;
                                 }
@@ -246,7 +385,9 @@ public class TodoListManager {
                                     }
                                 }
                                 LocalTime newdeadtime =
-                                        getDeadlineTime(newdeadline,"마감시간");
+                                        getDeadlineTime(newdeadline,dateNow,
+                                                timeNow,
+                                                "마감시간");
                                 if(newdeadtime == null){
                                     continue outerLoop2;
                                 }
@@ -278,7 +419,7 @@ public class TodoListManager {
                                 System.out.println("이전 단계로 돌아갑니다.");
                                 continue outerLoop2;
                             }
-                            LocalDate startDate = getDeadlineDate("시작날짜");
+                            LocalDate startDate = getDeadlineDate("시작날짜",null);
                             if(startDate == null){
                                 continue outerLoop2;
                             }
@@ -289,6 +430,7 @@ public class TodoListManager {
                                 }
                             }
                             LocalTime startTime = getDeadlineTime(startDate,
+                                    deadline,null,
                                     "시작시간");
                             if (startTime == null) {
                                 continue outerLoop2;
@@ -324,7 +466,8 @@ public class TodoListManager {
                                 return;
                             }else{
                                 System.out.println("체크 가능 시작시점를 수정합니다.");
-                                LocalDate startDate = getDeadlineDate("시작날짜");
+                                LocalDate startDate = getDeadlineDate("시작날짜",
+                                        null);
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
@@ -335,7 +478,8 @@ public class TodoListManager {
                                     }
                                 }
                                 LocalTime startTime =
-                                        getDeadlineTime(startDate,"시작시간");
+                                        getDeadlineTime(startDate,deadline,null,
+                                                "시작시간");
                                 if (startTime == null) {
                                     continue outerLoop2;
                                 }
@@ -381,14 +525,12 @@ public class TodoListManager {
                     continue;
                 }
                 TodoList todo = todoList.get(idx);
-                LocalDate nowDate = inputManager.stringToLocalDate(dateNow);
-                LocalTime nowTime = inputManager.stringToLocalTime(timeNow);
 
                 // 체크 시작일/시간 검사
                 if (todo.isCanCheckAfterCheckStartDate()) {
                     LocalDate todoDate = todo.getCheckStartDate();
                     LocalTime todoTime = todo.getCheckStartTime();
-                    if (nowDate.isBefore(todoDate) || (nowDate.isEqual(todoDate) && nowTime.isBefore(todoTime))) {
+                    if (dateNow.isBefore(todoDate) || (dateNow.isEqual(todoDate) && timeNow.isBefore(todoTime))) {
                         System.out.println("아직 체크 가능 기간이 아닙니다.");
                         return;
                     }
@@ -398,7 +540,7 @@ public class TodoListManager {
                 if (todo.isHasDeadline() && !todo.isCanCheckAfterDeadline()) {
                     LocalDate todoDate = todo.getDeadline();
                     LocalTime todoTime = todo.getDeadTime();
-                    if (nowDate.isAfter(todoDate) || (nowDate.isEqual(todoDate) && nowTime.isAfter(todoTime))) {
+                    if (dateNow.isAfter(todoDate) || (dateNow.isEqual(todoDate) && timeNow.isAfter(todoTime))) {
                         System.out.println("체크 가능한 기간이 지났습니다.");
                         return;
                     }
@@ -458,11 +600,19 @@ public class TodoListManager {
             }
         }
     }
+    // 반복되는 할일 추가하기
+    public void addRegularList(List<TodoList> todoList) {
+    }
     // 할 일 목록 출력 메소드
     public void showList(List<TodoList> list) {
         System.out.println("========== 할 일 목록 ==========");
         for (int i = 0; i < list.size(); i++) {
             TodoList todo = list.get(i);
+            if(todo.getBusy().equals(BusyType.BUSY_Y)){
+                System.out.print("[!] ");
+            }else{
+                System.out.print("[ ] ");
+            }
             String isCheck = todo.isCheck() ? " [v]" : " [ ]";
             if(!todo.isHasDeadline() && !todo.isCanCheckAfterCheckStartDate()){
                 System.out.println((i+1) + todo.showOnlyTitle() + isCheck);
@@ -487,10 +637,10 @@ public class TodoListManager {
                 System.out.println("이전 단계로 돌아갑니다.");
                 return null;
             }
-            if (inputManager.checkTitleLength(title)) {
+            if (inputManager.checkTitleLengthAndFirstChar(title)) {
                 return title;
             }
-            System.out.println("제목의 길이가 유효하지 않습니다. 다시 입력해주세요.");
+            System.out.println("잘못된 입력입니다. 다시 입력해주세요.");
         }
     }
     // 사용자 확인 받기
@@ -522,33 +672,93 @@ public class TodoListManager {
         }
     }
     // 마감일 입력받기
-    private LocalDate getDeadlineDate(String type) {
+    private LocalDate getDeadlineDate(String type,LocalDate dateNow) {
         while (true) {
             System.out.println(type + "을 입력해주세요 (YYYYMMDD).");
             System.out.println("취소하려면 c 를 입력해주세요.");
-            String deadline = sc.nextLine();
-            if (deadline.equals("c")) {
+            String input = sc.nextLine();
+            if (input.equals("c")) {
                 return null;
             }
+            LocalDate deadline =
+                    inputManager.stringToLocalDate(inputManager.formatDate(input));
             if (inputManager.checkDateInput(deadline,dateNow)) {
-                return inputManager.stringToLocalDate(inputManager.formatDate(deadline));
+                return deadline;
             }
-            System.out.println("유효하지 않은 날짜입니다. 다시 입력해주세요.");
         }
     }
     // 마감 시간 입력받기
-    private LocalTime getDeadlineTime(LocalDate today,String type) {
+    private LocalTime getDeadlineTime(LocalDate today,LocalDate dateNow,
+                                      LocalTime timeNow,
+                                      String type) {
         while (true) {
             System.out.println(type + "을 입력해주세요 (HHMM).");
             System.out.println("취소하려면 c 를 입력해주세요.");
-            String time = sc.nextLine();
-            if (time.equals("c")) {
+            String input = sc.nextLine();
+            if(input.equals("c")){
                 return null;
             }
+            LocalTime time =
+                    inputManager.stringToLocalTime(inputManager.formatTime(input));
             if (inputManager.checkTimeInput(time,timeNow,today,dateNow)) {
-                return inputManager.stringToLocalTime(inputManager.formatTime(time));
+                return time;
             }
-            System.out.println("유효하지 않은 시간입니다. 다시 입력해주세요.");
         }
     }
+    // 바쁨 할일 생성시  중복시간 겹치는지 검증하는 함수
+    // 기준날짜 ~ 마감일
+    private boolean canCreateBusyJob(LocalDate date,LocalTime time){
+        for(TodoList list : todoList){
+            // 바쁨 할일간에는 교차 불가
+            LocalDate date1 = list.getDeadline();
+            LocalTime time1 = list.getDeadTime();
+            if (list.getBusy().equals(BusyType.BUSY_Y)) {
+                /*
+                    시작일이 없기 때문에, 오늘 날짜보다 마감일이 이전이면 겹칠일 x
+                 */
+                if(date1.isAfter(dateNow)){
+                    return false;
+                }
+                if(date1.equals(dateNow) && (time1.isAfter(timeNow) || time1.equals(timeNow))){
+                    return false;
+                }
+
+            }
+            // 기존 할일과는 범위가있으면 생성 가능
+            else{
+                /*
+                    생성하려는 바쁨 할일 보다 작으면 가능 (틈이 있으니까)
+                 */
+                if(date1.isAfter(date)){
+                    return false;
+                }
+                if(date1.equals(date) && (time1.isAfter(time) || time1.equals(time))){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    // 일반 할일 생성시 생성 가능한지 확인하는 함수
+    private boolean canCreateNormalJob(LocalDate date,LocalTime time){
+        for(TodoList list : todoList){
+            // 바쁨 할일만 고려하면됨
+            if (list.getBusy().equals(BusyType.BUSY_Y)) {
+                LocalDate date1 = list.getDeadline();
+                LocalTime time1 = list.getDeadTime();
+                /*
+                    바쁨할일보다 크거나 같으면 안됨
+                 */
+                if(date.isAfter(date1)){
+                    return false;
+                }
+                if(date.equals(date1) && (time.isAfter(time1) || time.equals(time1))){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
 }

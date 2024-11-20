@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -9,8 +10,8 @@ public class Main {
     static Scanner sc  = new Scanner(System.in);
     static BufferedReader reader;
     static BufferedWriter writer;
-    static String dateNow;
-    static String timeNow;
+    static LocalDate dateNow;
+    static LocalTime timeNow;
     /*
         확장 대비 목록
         1. 날짜검색
@@ -32,6 +33,7 @@ public class Main {
      */
     public static void main(String[] args) throws IOException
     {
+        System.out.println(LocalDateTime.now());
         // 폴더 생성
         File dir = new File("./data");
         if(!dir.exists()){
@@ -63,19 +65,22 @@ public class Main {
         if ((line = reader.readLine()) != null) {
             String[] dateAndTime = line.split("\\|");
             if(dateAndTime.length == 2){
-                dateNow = dateAndTime[0];
-                timeNow = dateAndTime[1];
+                dateNow = inputManager.stringToLocalDate(dateAndTime[0]);
+                timeNow = inputManager.stringToLocalTime(dateAndTime[1]);
                 System.out.println("사용자가 마지막으로 입력한 날짜와 시간 :" + dateNow+"일 "+timeNow);
             }
         }else{
             System.out.println("설정된 날짜가 없습니다. 최초 오늘 날짜를 설정합니다.");
         }
-        String beforeDate = dateNow;
+        LocalDate beforeDate = dateNow;
         while(true){
             System.out.println("오늘 날짜를 입력해주세요.(YYYYMMDD): ");
-            String today = sc.nextLine();
+            String input = sc.nextLine();
+            LocalDate today =
+                    inputManager.stringToLocalDate(inputManager.formatDate(input));
+            System.out.println(today);
             if(inputManager.checkDateInput(today,dateNow)){
-                dateNow = inputManager.formatDate(today);
+                dateNow = today;
                 System.out.println("오늘의 날짜 : " + dateNow);
                 break;
             }
@@ -83,10 +88,11 @@ public class Main {
 
         while(true){
             System.out.println("현재 시간을 입력해주세요.(HHMM): ");
-            String time = sc.nextLine();
+            LocalTime time =
+                    inputManager.stringToLocalTime(inputManager.formatTime(sc.nextLine()));
             if(inputManager.checkTimeInput(time,timeNow,
-                    stringToLocalDate(dateNow),beforeDate)){
-                timeNow = inputManager.formatTime(time);
+                    dateNow,beforeDate)){
+                timeNow = time;
                 System.out.println("오늘의 시간 : " + timeNow);
                 break;
             }
@@ -124,7 +130,9 @@ public class Main {
                 todoListManager.deleteList(todoList);
             }else if(input.equals("c")){
                 todoListManager.checkList(todoList);
-            }else if(input.equals("exit")){
+            }else if(input.equals("r")){
+                todoListManager.addRegularList(todoList);
+            } else if(input.equals("exit")){
                 break;
             }else{
                 System.out.println("잘못된 입력입니다.");
@@ -148,7 +156,9 @@ public class Main {
                     + checkAfterDeadline + "|"
                     + (todo.getCheckStartDate() != null ? todo.getCheckStartDate() : "") + "|"
                     + (todo.getCheckStartTime() != null ? todo.getCheckStartTime() : "") + "|"
-                    + check;
+                    + check + "|"
+                    + todo.getBusy() + "|"
+                    + todo.getCycle();
             fileContent.append(line).append(System.lineSeparator());
         }
 
@@ -178,6 +188,8 @@ public class Main {
         String checkDate = parts[4];
         String checkTime = parts[5];
         boolean isCheck = "Y".equals(parts[6]);
+        BusyType bType = BusyType.valueOf(parts[7]);
+        CycleType cType = CycleType.valueOf(parts[8]);
 
         LocalDate date1 = null;
         LocalTime time1 = null;
@@ -221,6 +233,8 @@ public class Main {
             }
         }
         todo.setCheck(isCheck);
+        todo.setBusy(bType);
+        todo.setCycle(cType);
         return todo;
     }
 
@@ -249,6 +263,9 @@ public class Main {
             System.out.println();
         }
         System.out.println("=====================================\n");
+    }
+    public static String dateToString(String date){
+        return date.replace("-","");
     }
     // 날짜 계산을 위해 YYYY-MM-DD 형식을 LocalDate로 변경해주는 함수
     public static LocalDate stringToLocalDate(String dateStr) {

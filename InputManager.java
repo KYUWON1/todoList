@@ -3,23 +3,25 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class InputManager {
-    // 날짜 유효성 통합 검증
-    public boolean checkDateInput(String date, String dateNow){
-        if(isNumeric(date) && checkDateVaildation(date) && checkDateIsAfter(date,dateNow)){
+    // 메인 날짜 유효성 통합 검증
+    public boolean checkDateInput(LocalDate date, LocalDate dateNow){
+        String formatDate = date.toString().replace("-","");
+        if(isNumeric(formatDate) && checkDateVaildation(formatDate) && checkDateIsAfter(date,dateNow)){
             return true;
         }
         return false;
     }
     // 시간 유효성 검증
-    public boolean checkTimeInput(String time,String timeNow,LocalDate today,
-                                  String dateNow){
+    public boolean checkTimeInput(LocalTime time,LocalTime timeNow,LocalDate today,
+                                  LocalDate dateNow){
+        String formatTime = time.toString().replace(":","");
         // 이전 설정 날짜가 없으면 true
         if(dateNow == null){
-            if(isNumeric(time) && checkTimeValidation(time)){
+            if(isNumeric(formatTime) && checkTimeValidation(formatTime)){
                 return true;
             }
         }
-        if(isNumeric(time) && checkTimeValidation(time) && checkTimeIsAfter(time,timeNow,today,dateNow)){
+        if(isNumeric(formatTime) && checkTimeValidation(formatTime) && checkTimeIsAfter(time,timeNow,today,dateNow)){
             return true;
         }
         return false;
@@ -49,14 +51,12 @@ public class InputManager {
         return true;
     }
     // 초기에 입력한 날짜보다 이전인지 확인하는 메소드
-    public boolean  checkDateIsAfter(String date,String dateNow){
-        LocalDate inputDate = stringToLocalDate(formatDate(date));
+    public boolean  checkDateIsAfter(LocalDate date,LocalDate dateNow){
         if(dateNow == null){
             return true;
         }
-        LocalDate savedDate = stringToLocalDate(dateNow);
-        if(inputDate.isBefore(savedDate)){
-            System.out.println("사용자가 초기에 입력한 날짜보다 이전의 날짜는 허용되지않습니다(날짜).");
+        if(date.isBefore(dateNow)){
+            System.out.println(dateNow + " 보다 이전의 날짜는 허용되지않습니다.");
             return false;
         }
         return true;
@@ -82,30 +82,32 @@ public class InputManager {
         return true;
     }
     // 시간 이전인가 체크
-    public boolean checkTimeIsAfter(String time,String timeNow,LocalDate today,
-                                    String dateNow){
-        LocalDate savedDate = stringToLocalDate(dateNow);
+    public boolean checkTimeIsAfter(LocalTime time,LocalTime timeNow,
+                                    LocalDate today,
+                                    LocalDate dateNow){
         // 입력으로 받은 날짜가 기준 날짜보다 이후이면,시간 상관 x
-        if(today.isAfter(savedDate)){
+        if(today.isAfter(dateNow)){
             return true;
         }
         // 이전 날짜이면 Date 함수에서 걸러지고, 같으면 넘어올떄 비교
-        LocalTime nowTime = stringToLocalTime(formatTime(time));
         if(timeNow == null){
             return true;
         }
-        LocalTime beforeTime = stringToLocalTime(timeNow);
-        if(beforeTime.isAfter(nowTime)){
-            System.out.println("사용자가 입력한 날짜보다 이전의 날짜는 허용되지않습니다(시간).");
+        if(timeNow.isAfter(time)){
+            System.out.println(timeNow + "보다 이전의 시간은 허용되지않습니다.");
             return false;
         }
         return true;
     }
     // 제목의 길이가 1~20 사이인지 확인하는 메소드
     // fix 1. 공백 입력 불가하도록 수정
-    public boolean checkTitleLength(String title){
+    public boolean checkTitleLengthAndFirstChar(String title){
         if(title.trim().length() < 1 || title.length() > 20){
             System.out.println("제목의 이름은 1~20자 사이입니다.");
+            return false;
+        }
+        if(title.trim().charAt(0) == '!'){
+            System.out.println("! 는 제목 가장앞에 사용할 수 없습니다.");
             return false;
         }
         return true;

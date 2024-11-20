@@ -16,6 +16,26 @@ public class TodoList {
     private boolean canCheckAfterDeadline;
     // 요구사항 1D
     private boolean canCheckAfterCheckStartDate;
+    // 요구사항 2A
+    private BusyType busy;
+    // 요구사항 2B
+    private CycleType cycleType = CycleType.NONE;
+
+    public BusyType getBusy() {
+        return busy;
+    }
+
+    public void setBusy(BusyType busy) {
+        this.busy = busy;
+    }
+
+    public CycleType getCycle() {
+        return cycleType;
+    }
+
+    public void setCycle(CycleType cycleType) {
+        this.cycleType = cycleType;
+    }
 
     public TodoList(){
     }
