@@ -112,10 +112,12 @@ public class Main {
             }else{
                 List<TodoList> list = new ArrayList<>();
                 CycleType cType = CycleType.valueOf(reader.readLine());
+                String listName = reader.readLine();
+                LocalDateTime cycleEnd = LocalDateTime.parse(reader.readLine());
                 while(!(line = reader.readLine()).equals("%")){
                     list.add(createList(line));
                 }
-                regulerList.add(new RegularList(list,cType));
+                regulerList.add(new RegularList(list,cType,listName,cycleEnd));
             }
         }
         // 검색용 Map 초기화
@@ -140,9 +142,27 @@ public class Main {
             if(input.equals("a")){
                 todoListManager.addList(todoList);
             }else if(input.equals("m")){
-                todoListManager.updateList(todoList);
+                System.out.println("어떤 할일을 수정하시겠습니까(일반,반복)?");
+                System.out.println("취소하고 싶으면 c를 입력해주세요.");
+                String input2 = sc.nextLine();
+                if(input2.equals("일반")){
+                    todoListManager.updateList(todoList);
+                }else if(input2.equals("반복")){
+                    todoListManager.updateRegularList(regulerList);
+                }else{
+                    System.out.println("잘못입력하셨습니다. 메인메뉴로 돌아갑니다.");
+                }
             }else if(input.equals("d")){
-                todoListManager.deleteList(todoList);
+                System.out.println("어떤 할일을 삭제하시겠습니까(일반,반복)?");
+                System.out.println("취소하고 싶으면 c를 입력해주세요.");
+                String input2 = sc.nextLine();
+                if(input2.equals("일반")){
+                    todoListManager.deleteList(todoList);
+                }else if(input2.equals("반복")){
+                    todoListManager.deleteRegularList(regulerList);
+                }else{
+                    System.out.println("잘못입력하셨습니다. 메인메뉴로 돌아갑니다.");
+                }
             }else if(input.equals("c")){
                 System.out.println("어떤 할일을 체크하시겠습니까(일반,반복)?");
                 System.out.println("취소하고 싶으면 c를 입력해주세요.");
@@ -188,6 +208,8 @@ public class Main {
         for(RegularList list : regulerList){
             fileContent.append("$").append(System.lineSeparator());
             fileContent.append(list.getCycleType()).append(System.lineSeparator());
+            fileContent.append(list.getListName()).append(System.lineSeparator());
+            fileContent.append(list.getCycleEnd()).append(System.lineSeparator());
             for(TodoList todo : list.getTodoList()){
                 String check = todo.isCheck() ? "Y" : "N";
                 String checkAfterDeadline = todo.isCanCheckAfterDeadline() ? "Y" : "N";

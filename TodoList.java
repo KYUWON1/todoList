@@ -98,6 +98,20 @@ public class TodoList {
                 ". title: " + this.title + ", 마감일 :" + this.deadline + "일 " + this.deadTime + "분, 체크 가능 시작일 : " + this.checkStartDate + "일 " + this.checkStartTime + "분";
         return output;
     }
+    public String showRegularListDetail(){
+        String output = ". ";
+        if(this.hasDeadline){
+            output += "마감일 : " + this.deadline + "일 " + this.deadTime + "분 ";
+        }else{
+            output += "마감일 : 미설정 ";
+        }
+        if(this.canCheckAfterCheckStartDate){
+            output += "시작일 : " + this.checkStartDate +"일 " + this.checkStartTime + "분 ";
+        }else{
+            output += "시작일 : 미설정 ";
+        }
+        return output;
+    }
 
     public static TodoList titleAndCheckStartDate(String title, LocalDate startDate, LocalTime startTime) {
         TodoList newTodo = new TodoList();
