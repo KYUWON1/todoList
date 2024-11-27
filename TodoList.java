@@ -18,23 +18,13 @@ public class TodoList {
     private boolean canCheckAfterCheckStartDate;
     // 요구사항 2A
     private BusyType busy;
-    // 요구사항 2B
-    private CycleType cycleType = CycleType.NONE;
-
+    
     public BusyType getBusy() {
         return busy;
     }
 
     public void setBusy(BusyType busy) {
         this.busy = busy;
-    }
-
-    public CycleType getCycle() {
-        return cycleType;
-    }
-
-    public void setCycle(CycleType cycleType) {
-        this.cycleType = cycleType;
     }
 
     public TodoList(){
@@ -133,6 +123,40 @@ public class TodoList {
         return newTodo;
     }
 
+    public static TodoList createRegularList(
+            String title,
+            boolean hasDLine,
+            LocalDate deadline,
+            LocalTime deadTime,
+            BusyType bType,
+            boolean hasSLine,
+            LocalDate startline,
+            LocalTime startTime,
+            boolean canCheckAfterD
+            ){
+        TodoList newTodo = new TodoList();
+        newTodo.setTitle(title);
+        newTodo.isCheck(false);
+        newTodo.setHasDeadline(false);
+        if(hasDLine){
+            newTodo.setHasDeadline(true);
+            newTodo.setDeadline(deadline);
+            newTodo.setDeadTime(deadTime);
+        }
+        newTodo.setBusy(bType);
+        newTodo.setCanCheckAfterCheckStartDate(false);
+        if(hasSLine){
+            newTodo.setCanCheckAfterCheckStartDate(true);
+            newTodo.setCheckStartDate(startline);
+            newTodo.setCheckStartTime(startTime);
+        }
+        newTodo.setCanCheckAfterDeadline(false);
+        if(canCheckAfterD){
+            newTodo.setCanCheckAfterDeadline(true);
+        }
+        return newTodo;
+    }
+
     public static TodoList titleAndDeadlineCAN(String title, LocalDate deadlineDate, LocalTime deadlineTime) {
         TodoList newTodo = new TodoList();
         newTodo.setTitle(title);
@@ -219,5 +243,21 @@ public class TodoList {
 
     public void setCanCheckAfterCheckStartDate(boolean canCheckAfterCheckStartDate) {
         this.canCheckAfterCheckStartDate = canCheckAfterCheckStartDate;
+    }
+
+    @Override
+    public String toString() {
+        return "TodoList{" +
+                "title='" + title + '\'' +
+                ", isCheck=" + isCheck +
+                ", deadline=" + deadline +
+                ", deadTime=" + deadTime +
+                ", checkStartDate=" + checkStartDate +
+                ", checkStartTime=" + checkStartTime +
+                ", hasDeadline=" + hasDeadline +
+                ", canCheckAfterDeadline=" + canCheckAfterDeadline +
+                ", canCheckAfterCheckStartDate=" + canCheckAfterCheckStartDate +
+                ", busy=" + busy +
+                '}';
     }
 }

@@ -3,29 +3,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class InputManager {
-    // 메인 날짜 유효성 통합 검증
-    public boolean checkDateInput(LocalDate date, LocalDate dateNow){
-        String formatDate = date.toString().replace("-","");
-        if(isNumeric(formatDate) && checkDateVaildation(formatDate) && checkDateIsAfter(date,dateNow)){
-            return true;
-        }
-        return false;
-    }
-    // 시간 유효성 검증
-    public boolean checkTimeInput(LocalTime time,LocalTime timeNow,LocalDate today,
-                                  LocalDate dateNow){
-        String formatTime = time.toString().replace(":","");
-        // 이전 설정 날짜가 없으면 true
-        if(dateNow == null){
-            if(isNumeric(formatTime) && checkTimeValidation(formatTime)){
-                return true;
-            }
-        }
-        if(isNumeric(formatTime) && checkTimeValidation(formatTime) && checkTimeIsAfter(time,timeNow,today,dateNow)){
-            return true;
-        }
-        return false;
-    }
     // 날짜의 유효성 검증 년,월,일의 범위 제한
     public boolean checkDateVaildation(String date){
         if(date.length() != 8){
@@ -85,12 +62,12 @@ public class InputManager {
     public boolean checkTimeIsAfter(LocalTime time,LocalTime timeNow,
                                     LocalDate today,
                                     LocalDate dateNow){
-        // 입력으로 받은 날짜가 기준 날짜보다 이후이면,시간 상관 x
-        if(today.isAfter(dateNow)){
+        // 이전 시간이 없으면 굳이 비교 x
+        if(timeNow == null){
             return true;
         }
-        // 이전 날짜이면 Date 함수에서 걸러지고, 같으면 넘어올떄 비교
-        if(timeNow == null){
+        // 입력으로 받은 날짜가 기준 날짜보다 이후이면,시간 상관 x
+        if(today.isAfter(dateNow)){
             return true;
         }
         if(timeNow.isAfter(time)){

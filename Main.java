@@ -21,6 +21,8 @@ public class Main {
     // TodoList 저장용 자료구조
     static List<TodoList> todoList = new ArrayList<>();
 
+    static List<RegularList> regulerList = new ArrayList<>();
+
     // 검색 대비용 자료구조
     static Map<String,List<Integer>> titleIndex = new HashMap<>();
     /*
@@ -76,10 +78,11 @@ public class Main {
         while(true){
             System.out.println("오늘 날짜를 입력해주세요.(YYYYMMDD): ");
             String input = sc.nextLine();
+            if(!inputManager.checkDateVaildation(input) || !inputManager.isNumeric(input))
+                continue;
             LocalDate today =
                     inputManager.stringToLocalDate(inputManager.formatDate(input));
-            System.out.println(today);
-            if(inputManager.checkDateInput(today,dateNow)){
+            if(inputManager.checkDateIsAfter(today,dateNow)){
                 dateNow = today;
                 System.out.println("오늘의 날짜 : " + dateNow);
                 break;
@@ -88,9 +91,12 @@ public class Main {
 
         while(true){
             System.out.println("현재 시간을 입력해주세요.(HHMM): ");
+            String input = sc.nextLine();
+            if(!inputManager.isNumeric(input) || !inputManager.checkTimeValidation(input))
+                continue;
             LocalTime time =
-                    inputManager.stringToLocalTime(inputManager.formatTime(sc.nextLine()));
-            if(inputManager.checkTimeInput(time,timeNow,
+                    inputManager.stringToLocalTime(inputManager.formatTime(input));
+            if(inputManager.checkTimeIsAfter(time,timeNow,
                     dateNow,beforeDate)){
                 timeNow = time;
                 System.out.println("오늘의 시간 : " + timeNow);
@@ -100,8 +106,17 @@ public class Main {
 
         // Txt 파일 todoList 처리
         while((line = reader.readLine()) != null){
-            TodoList todo = createList(line);
-            todoList.add(todo);
+            if(!line.equals("$")){
+                TodoList todo = createList(line);
+                todoList.add(todo);
+            }else{
+                List<TodoList> list = new ArrayList<>();
+                CycleType cType = CycleType.valueOf(reader.readLine());
+                while(!(line = reader.readLine()).equals("%")){
+                    list.add(createList(line));
+                }
+                regulerList.add(new RegularList(list,cType));
+            }
         }
         // 검색용 Map 초기화
 //        initTitleIndex(todoList);
@@ -111,15 +126,15 @@ public class Main {
         System.out.println("todoList 프로그램을 시작합니다.\n\n\n");
 
         TodoListManager todoListManager = new TodoListManager(sc,dateNow,
-                timeNow,todoList,inputManager);
-        todoListManager.showList(todoList);
+                timeNow,todoList,regulerList,inputManager);
 
         String input = "";
         // 프로그램 시작
         while(true){
             todoListManager.showList(todoList);
+            todoListManager.showRegularList(regulerList);
             System.out.println("원하는 서비스의 명령어를 입력해주세요.\na : 리스트 추가하기\nm : 리스트" +
-                    " 수정하기\nd : 리스트 삭제\nc : 리스트 체크 및 해제");
+                    " 수정하기\nd : 리스트 삭제\nc : 리스트 체크 및 해제\nr : 반복되는 할일 추가하기");
             System.out.println("종료를 원하시면 exit을 입력해주세요.");
             input = sc.nextLine();
             if(input.equals("a")){
@@ -129,7 +144,16 @@ public class Main {
             }else if(input.equals("d")){
                 todoListManager.deleteList(todoList);
             }else if(input.equals("c")){
-                todoListManager.checkList(todoList);
+                System.out.println("어떤 할일을 체크하시겠습니까(일반,반복)?");
+                System.out.println("취소하고 싶으면 c를 입력해주세요.");
+                String input2 = sc.nextLine();
+                if(input2.equals("일반")){
+                    todoListManager.checkList(todoList);
+                }else if(input2.equals("반복")){
+                    todoListManager.checkRegularList(regulerList);
+                }else{
+                    System.out.println("잘못입력하셨습니다. 메인메뉴로 돌아갑니다.");
+                }
             }else if(input.equals("r")){
                 todoListManager.addRegularList(todoList);
             } else if(input.equals("exit")){
@@ -138,12 +162,13 @@ public class Main {
                 System.out.println("잘못된 입력입니다.");
             }
         }
-        updateFile(todoList);
+        updateFile(todoList,regulerList);
         writer.close();
         reader.close();
     }
     // 종료 전에 만들어진 MAP을 통해서 FILE 재설정 - updateFile 메소드 수정
-    private static void updateFile(List<TodoList> todoList) {
+    private static void updateFile(List<TodoList> todoList,
+                                   List<RegularList> regulerList) {
         File file = new File("./data/file.txt");
         StringBuilder fileContent = new StringBuilder();
         fileContent.append(dateNow).append("|").append(timeNow).append(System.lineSeparator());
@@ -157,9 +182,26 @@ public class Main {
                     + (todo.getCheckStartDate() != null ? todo.getCheckStartDate() : "") + "|"
                     + (todo.getCheckStartTime() != null ? todo.getCheckStartTime() : "") + "|"
                     + check + "|"
-                    + todo.getBusy() + "|"
-                    + todo.getCycle();
+                    + todo.getBusy();
             fileContent.append(line).append(System.lineSeparator());
+        }
+        for(RegularList list : regulerList){
+            fileContent.append("$").append(System.lineSeparator());
+            fileContent.append(list.getCycleType()).append(System.lineSeparator());
+            for(TodoList todo : list.getTodoList()){
+                String check = todo.isCheck() ? "Y" : "N";
+                String checkAfterDeadline = todo.isCanCheckAfterDeadline() ? "Y" : "N";
+                String line = todo.getTitle() + "|"
+                        + (todo.getDeadline() != null ? todo.getDeadline() : "") + "|"
+                        + (todo.getDeadTime() != null ? todo.getDeadTime() : "") + "|"
+                        + checkAfterDeadline + "|"
+                        + (todo.getCheckStartDate() != null ? todo.getCheckStartDate() : "") + "|"
+                        + (todo.getCheckStartTime() != null ? todo.getCheckStartTime() : "") + "|"
+                        + check + "|"
+                        + todo.getBusy();
+                fileContent.append(line).append(System.lineSeparator());
+            }
+            fileContent.append("%").append(System.lineSeparator());
         }
 
         try (BufferedWriter fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), StandardCharsets.UTF_8))) {
@@ -188,8 +230,7 @@ public class Main {
         String checkDate = parts[4];
         String checkTime = parts[5];
         boolean isCheck = "Y".equals(parts[6]);
-        BusyType bType = BusyType.valueOf(parts[7]);
-        CycleType cType = CycleType.valueOf(parts[8]);
+        BusyType bType = BusyType.valueOf(parts[7]);;
 
         LocalDate date1 = null;
         LocalTime time1 = null;
@@ -213,16 +254,20 @@ public class Main {
 
         TodoList todo;
         // 마감일 x, 체크 시작/마감 x
-        if (date1 == null && time1 == null) {
+        if (date1 == null && date2 == null) {
             todo = TodoList.onlyTitle(title);
         }
         // 마감일 o, 체크 시작/마감 x
-        else if (date2 == null && time2 == null) {
+        else if (date1 != null && date2 == null) {
             if (isCheckAfterDeadline) {
                 todo = TodoList.titleAndDeadlineCAN(title, date1, time1);
             } else {
                 todo = TodoList.titleAndDeadlineCANT(title, date1, time1);
             }
+        }
+        // 마감일 x, 체크 시작 o
+        else if(date1 == null && date2 != null){
+            todo = TodoList.titleAndCheckStartDate(title, date2, time2);
         }
         // 마감일 o, 체크 시작/마감 o
         else {
@@ -234,7 +279,6 @@ public class Main {
         }
         todo.setCheck(isCheck);
         todo.setBusy(bType);
-        todo.setCycle(cType);
         return todo;
     }
 
