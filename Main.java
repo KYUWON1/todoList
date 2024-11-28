@@ -175,7 +175,7 @@ public class Main {
                     System.out.println("잘못입력하셨습니다. 메인메뉴로 돌아갑니다.");
                 }
             }else if(input.equals("r")){
-                todoListManager.addRegularList(todoList);
+                todoListManager.addRegularList(regulerList);
             } else if(input.equals("exit")){
                 break;
             }else{
