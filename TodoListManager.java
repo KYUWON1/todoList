@@ -1,9 +1,6 @@
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -15,7 +12,6 @@ public class TodoListManager {
     private InputManager inputManager;
     private List<TodoList> todoList;
     private List<RegularList> regulerList;
-
     private enum TYPE {DEAD,START,BOTH};
 
     public TodoListManager(Scanner sc, LocalDate dateNow,
@@ -522,8 +518,7 @@ public class TodoListManager {
                         showRegularList(regulerList);
                         return;
                     }else if(aim.equals("deadline")){
-                        // 마감일 설정안되있을시 1. 마감일 설정 2. 마감이후 체크 설정
-                        while(true){
+                        outerLoop3:while(true){
                             LocalDate deadline;
                             LocalTime deadTime;
                             TodoList first = lists.getFirst();
@@ -557,114 +552,387 @@ public class TodoListManager {
                                     continue outerLoop2;
                                 }
                             }
-                            // 시작일이 지정되어있다면 로직점검
+                            // 시작일이 지정되어있다면 로직점검 -> 바쁨 or 일반인데 설정시간 o 
                             if(first.isCanCheckAfterCheckStartDate()){
                                 LocalDateTime start =
                                         LocalDateTime.of(first.getCheckStartDate(),first.getCheckStartTime());
                                 LocalDateTime end =
                                         LocalDateTime.of(deadline, deadTime);
                                 if(end.isBefore(start)){
-                                    System.out.println("마감시간이 시작시간보다 이후일수 없습니다" +
-                                            ".");
+                                    System.out.println("마감시간이 시작시간보다 이전일수 " +
+                                            "없습니다" + ".");
                                     continue;
                                 }
                                 List<TodoList> updateList = new ArrayList<>();
                                 if(regularList.getCycleType() == CycleType.WEEKLY){
-                                    while()
-                                }else{
-
-                                }
-
-                                if(first.getBusy() == BusyType.BUSY_Y){
-                                    if(!checkCreateRegularBusyJob(start, end)){
-                                        System.out.println("일정이 겹쳐 수정할 수 " +
-                                                "없습니다.");
-                                        continue;
+                                    updateList = createRegularList(
+                                            first,
+                                            start,end,
+                                            regularList.getCycleEnd(),
+                                            regularList.getCycleType());
+                                    if(first.getBusy() == BusyType.BUSY_Y){
+                                         updateList = createRegularList(first,
+                                                start,end,
+                                                 regularList.getCycleEnd());
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularBusyJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_Y, true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusDays(7);
+                                            end = end.plusDays(7);
+                                        }
+                                    }else{
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N, true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusDays(7);
+                                            end = end.plusDays(7);
+                                        }
                                     }
                                 }else{
-                                    if(!checkCreateRegularJob(start,end)){
-                                        System.out.println("일정이 겹쳐 수정할 수 없습니다.");
-                                        continue;
+                                    if(first.getBusy() == BusyType.BUSY_Y){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularBusyJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_Y, true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusMonths(1);
+                                            end = end.plusMonths(1);
+                                        }
+                                    }else{
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N,
+                                                                true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusMonths(1);
+                                            end = end.plusMonths(1);
+                                        }
                                     }
                                 }
-                            }
-                            // 마감일 이후 체크 여부 입력받음
-                            if(!getConfirm("마감일 이후 체크를 가능하도록")){
-                                todo.setDeadline(deadline);
-                                todo.setDeadTime(deadTime);
-                                todo.setHasDeadline(true);
-                                todo.setCanCheckAfterDeadline(false);
-                            }else{
-                                todo.setDeadline(deadline);
-                                todo.setDeadTime(deadTime);
-                                todo.setHasDeadline(true);
-                                todo.setCanCheckAfterDeadline(true);
+                                if(!getConfirm("마감일 이후 체크를 가능하도록")){
+                                    updateList.forEach(todo -> todo.setCanCheckAfterDeadline(false));
+                                }else{
+                                    updateList.forEach(todo -> todo.setCanCheckAfterDeadline(true));
+                                }
+                                regularList.setTodoList(updateList);
+                                System.out.println("해당 반복할일의 마감일이 업데이트 되었습니다.");
+                                showRegularList(regulerList);
+                                return;
+                            }// 시작일이 없을때 그냥 마감일만 변경하면됨. 일반 할일만 존재
+                            else{
+                                LocalDateTime end =
+                                        LocalDateTime.of(deadline, deadTime);
+                                List<TodoList> updateList = new ArrayList<>();
+                                if(regularList.getCycleType() == CycleType.WEEKLY){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            // 할일 생성 및 리스트에 추가
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            first.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            first.isCanCheckAfterDeadline()
+                                                    );
+                                            updateList.add(newTodo);
+                                            end = end.plusDays(7);
+                                        }
+                                }else{
+                                    while(end.isBefore(regularList.getCycleEnd())){
+                                        // 할일 생성 및 리스트에 추가
+                                        TodoList newTodo =
+                                                TodoList.createRegularList(
+                                                        first.getTitle(), true,
+                                                        end.toLocalDate(),
+                                                        end.toLocalTime(),
+                                                        BusyType.BUSY_N, false,
+                                                        null,
+                                                        null,
+                                                        first.isCanCheckAfterDeadline()
+                                                );
+                                        updateList.add(newTodo);
+                                        end = end.plusMonths(7);
+                                    }
+                                }
+                                if(!getConfirm("마감일 이후 체크를 가능하도록")){
+                                    updateList.forEach(todo -> todo.setCanCheckAfterDeadline(false));
+                                }else{
+                                    updateList.forEach(todo -> todo.setCanCheckAfterDeadline(true));
+                                }
+                                regularList.setTodoList(updateList);
+                                System.out.println("해당 반복할일의 마감일이 업데이트 되었습니다.");
+                                showRegularList(regulerList);
+                                return;
                             }
                         }
-                    }
-                    else if(aim.equals("start")){
-                        while(true){
-                            // 체크 시작일 설정안되어있을때
+                    } else if(aim.equals("start")){
+                        outerLoop3:while(true){
                             LocalDate startDate;
                             LocalTime startTime;
-                            if(!todo.isCanCheckAfterCheckStartDate()){
-                                System.out.println("시작날짜가 설정되어있지 않습니다.");
-                                if(!getConfirm("시작날짜를")){
+                            TodoList first = lists.getFirst();
+                            // 마감일 입력받기
+                            if(!first.isCanCheckAfterCheckStartDate()) {
+                                if (!getConfirm("설정된 시작날짜가 없습니다. 시작날짜를")) {
                                     System.out.println("이전 단계로 돌아갑니다.");
                                     continue outerLoop2;
                                 }
-                                startDate = getDeadlineDate("시작날짜",null);
+                                startDate = getDeadlineDate("시작날짜",dateNow);
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
-                                startTime = getDeadlineTime(startDate, null,null,
-                                        "시작시간");
-                                if (startTime == null) {
+                                startTime =
+                                        getDeadlineTime(startDate,dateNow,timeNow,
+                                                "시작시간");
+                                if(startTime == null){
                                     continue outerLoop2;
                                 }
-                            }else{
-                                System.out.println("시작날짜가 설정되어있습니다. 시작날짜를 변경합니다.");
-                                startDate = getDeadlineDate("시작날짜",null);
+                            }else {
+                                System.out.println("설정된 시작날짜가 존재합니다. 시작날짜를 " +
+                                        "변경합니다.");
+                                startDate = getDeadlineDate("시작날짜",dateNow);
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
-                                startTime = getDeadlineTime(startDate, null,null,
-                                        "시작시간");
-                                if (startTime == null) {
+                                startTime =
+                                        getDeadlineTime(startDate,dateNow,timeNow,
+                                                "시작시간");
+                                if(startTime == null){
                                     continue outerLoop2;
                                 }
                             }
-                            if(todo.getBusy() == BusyType.BUSY_Y){
-                                if(canCreateBusyJob(todo.getDeadline(),
-                                        todo.getDeadTime(),
-                                        startDate,
-                                        startTime)){
-                                    System.out.println("일정이 겹쳐 수정할 수 " +
-                                            "없습니다.");
+                            // 마감일이 지정되어있다면 로직점검 -> 바쁨 or 일반인데 설정시간 o
+                            if(first.isHasDeadline()){
+                                LocalDateTime start =
+                                        LocalDateTime.of(startDate,startTime);
+                                LocalDateTime end =
+                                        LocalDateTime.of(first.getDeadline(),
+                                                first.getDeadTime());
+                                if(end.isBefore(start)){
+                                    System.out.println("마감시간이 시작시간보다 이전일수 " +
+                                            "없습니다" + ".");
                                     continue;
                                 }
-                            }else{
-                                if(canCreateNormalJob(todo.getDeadline(),
-                                        todo.getDeadTime(),
-                                        startDate,
-                                        startTime)){
-                                    System.out.println("일정이 겹쳐 수정할 수 없습니다.");
-                                    continue;
+                                List<TodoList> updateList = new ArrayList<>();
+                                if(regularList.getCycleType() == CycleType.WEEKLY){
+                                    if(first.getBusy() == BusyType.BUSY_Y){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularBusyJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_Y, true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusDays(7);
+                                            end = end.plusDays(7);
+                                        }
+                                    }else{
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N, true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusDays(7);
+                                            end = end.plusDays(7);
+                                        }
+                                    }
+                                }else{
+                                    if(first.getBusy() == BusyType.BUSY_Y){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularBusyJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_Y, true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusMonths(1);
+                                            end = end.plusMonths(1);
+                                        }
+                                    }else{
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularJob(start,end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "수정할 수 없습니다.");
+                                                continue outerLoop3;
+                                            }else{
+                                                // 할일 생성 및 리스트에 추가
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                first.getTitle(), true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N,
+                                                                true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                first.isCanCheckAfterDeadline()
+                                                        );
+                                                updateList.add(newTodo);
+                                            }
+                                            start = start.plusMonths(1);
+                                            end = end.plusMonths(1);
+                                        }
+                                    }
                                 }
+                                regularList.setTodoList(updateList);
+                                System.out.println("해당 반복할일의 시작날짜가 업데이트 되었습니다" +
+                                        ".");
+                                showRegularList(regulerList);
+                                return;
+                            }// 마감일이 없을때 그냥 마감일만 변경하면됨. 일반 할일만 존재
+                            else{
+                                LocalDateTime start =
+                                        LocalDateTime.of(startDate, startTime);
+                                List<TodoList> updateList = new ArrayList<>();
+                                if(regularList.getCycleType() == CycleType.WEEKLY){
+                                    while(start.isBefore(regularList.getCycleEnd())){
+                                        // 할일 생성 및 리스트에 추가
+                                        TodoList newTodo =
+                                                TodoList.createRegularList(
+                                                        first.getTitle(),
+                                                        false,
+                                                        null,
+                                                        null,
+                                                        BusyType.BUSY_N, true,
+                                                        start.toLocalDate(),
+                                                        start.toLocalTime(),
+                                                        first.isCanCheckAfterDeadline()
+                                                );
+                                        updateList.add(newTodo);
+                                        start = start.plusDays(7);
+                                    }
+                                }else{
+                                    while(start.isBefore(regularList.getCycleEnd())){
+                                        // 할일 생성 및 리스트에 추가
+                                        TodoList newTodo =
+                                                TodoList.createRegularList(
+                                                        first.getTitle(), false,
+                                                        null,
+                                                        null,
+                                                        BusyType.BUSY_N, true,
+                                                        start.toLocalDate(),
+                                                        start.toLocalTime(),
+                                                        first.isCanCheckAfterDeadline()
+                                                );
+                                        updateList.add(newTodo);
+                                        start = start.plusMonths(7);
+                                    }
+                                }
+                                regularList.setTodoList(updateList);
+                                System.out.println("해당 반복할일의 시작날짜가 업데이트 되었습니다" +
+                                        ".");
+                                showRegularList(regulerList);
+                                return;
                             }
-                            todo.setCheckStartDate(startDate);
-                            todo.setCheckStartTime(startTime);
-                            todo.setCanCheckAfterCheckStartDate(true);
-                            System.out.println((idx + 1) + "번의 시작날짜를 " +
-                                    "변경하였습니다.");
-                            // 다시 번호 선택 loop1, 수정항목 선택 loop2
-                            showList(todoList);
-                            return;
                         }
                     }else if(aim.equals("busy")){
                         while(true){
                             LocalDateTime start = null;
                             LocalDateTime end = null;
+                            // 해당 할일의 바쁨 파악
+                            TodoList todo = lists.getFirst();
                             if(todo.getBusy() == BusyType.BUSY_N){
                                 LocalDate endDate = null;
                                 LocalTime endTime = null;
@@ -711,21 +979,31 @@ public class TodoListManager {
                                     start = LocalDateTime.of(todo.getCheckStartDate()
                                             ,todo.getCheckStartTime());
                                 }
-                                if(!canCreateBusyJob(endDate,endTime,startDate
-                                        ,startTime)){
-                                    System.out.println("일정이 겹쳐 변경할 수 없습니다.");
-                                    continue;
+                                if(regularList.getCycleType() == CycleType.WEEKLY){
+                                    while(end.isBefore(regularList.getCycleEnd())){
+                                        if(!checkCreateRegularBusyJob(start,end)){
+                                            System.out.println("일정이 겹처 " +
+                                                    "바쁨설정을 변경할 수 없습니다.");
+                                            continue;
+                                        }
+                                        end = end.plusDays(7);
+                                        start = start.plusDays(7);
+                                    }
+                                }else{
+                                    while(end.isBefore(regularList.getCycleEnd())){
+                                        if(!checkCreateRegularBusyJob(start,end)){
+                                            System.out.println("일정이 겹처 " +
+                                                    "바쁨설정을 변경할 수 없습니다.");
+                                            continue;
+                                        }
+                                        end = end.plusMonths(1);
+                                        start = start.plusMonths(1);
+                                    }
                                 }
-                                todo.setBusy(BusyType.BUSY_Y);
-                                todo.setHasDeadline(true);
-                                todo.setDeadline(endDate);
-                                todo.setDeadTime(endTime);
-                                todo.setCanCheckAfterCheckStartDate(true);
-                                todo.setCheckStartDate(startDate);
-                                todo.setCheckStartTime(startTime);
-                                System.out.println((idx + 1) + "번을 바쁨할일로 " +
+                                lists.forEach(todoList -> todoList.setBusy(BusyType.BUSY_Y));
+                                System.out.println((idx + 1) + "번 목록을 바쁨할일로 " +
                                         "변경하였습니다.");
-                                showList(todoList);
+                                showRegularList(regulerList);
                                 return;
                             }else{
                                 // 일반 할일로 변경시엔 시작,마감이 반드시 존재
@@ -733,25 +1011,672 @@ public class TodoListManager {
                                     System.out.println("취소하셨습니다.");
                                     continue outerLoop2;
                                 }
-                                if(!canCreateNormalJob(todo.getDeadline(),
-                                        todo.getDeadTime(),
-                                        todo.getCheckStartDate(),todo.getCheckStartTime())){
-                                    System.out.println("일정이 겹처 변경할 수 없습니다.");
+                                LocalDateTime existStart =
+                                        LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+                                LocalDateTime existEnd =
+                                        LocalDateTime.of(todo.getDeadline(),
+                                                todo.getDeadTime());
+                                if(regularList.getCycleType() == CycleType.WEEKLY){
+                                    while(existEnd.isBefore(regularList.getCycleEnd())){
+                                        if(!checkCreateRegularJob(existStart, existEnd)){
+                                            System.out.println("일정이 겹처 변경할 수 없습니다.");
+                                            continue;
+                                        }
+                                        existStart = existStart.plusDays(7);
+                                        existEnd = existEnd.plusDays(7);
+                                    }
+                                }else{
+                                    while(existEnd.isBefore(regularList.getCycleEnd())){
+                                        if(!checkCreateRegularJob(existStart, existEnd)){
+                                            System.out.println("일정이 겹처 변경할 수 없습니다.");
+                                            continue;
+                                        }
+                                        existStart = existStart.plusMonths(1);
+                                        existEnd = existEnd.plusMonths(1);
+                                    }
                                 }
-                                todo.setBusy(BusyType.BUSY_N);
-                                System.out.println((idx + 1) + "번을 바쁨할일로 " +
+                                lists.forEach(todoList -> todoList.setBusy(BusyType.BUSY_N));
+                                System.out.println((idx + 1) + "번 목록을 일반할일로" +
+                                        " " +
                                         "변경하였습니다.");
-                                showList(todoList);
+                                showRegularList(regulerList);
                                 return;
                             }
                         }
-                    }else{
+                    }else if(aim.equals("cycle")){
+                        while(true){
+                            if(regularList.getCycleType() == CycleType.WEEKLY){
+                                System.out.println("해당 할일은 주단위 반복입니다.");
+                                if(!getConfirm("매월 반복으로")){
+                                    System.out.println("이전단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                TodoList todo = lists.getFirst();
+                                // 바쁨일때 
+                                if(todo.getBusy() == BusyType.BUSY_Y){
+                                    LocalDateTime start =
+                                            LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+                                    LocalDateTime end =
+                                            LocalDateTime.of(todo.getDeadline(),
+                                                    todo.getDeadTime());
+                                    List<TodoList> newList = new ArrayList<>();
+                                    while(end.isBefore(regularList.getCycleEnd())){
+                                        if(!checkCreateRegularBusyJob(start,
+                                                end)){
+                                            System.out.println("일정이 겹처 주기를 " +
+                                                    "변경할 수 없습니다.");
+                                            continue;
+                                        }else{
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_Y, true,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                        }
+                                        end = end.plusMonths(1);
+                                        start = start.plusMonths(1);
+                                    }
+                                    regularList.setTodoList(newList);
+                                    regularList.setCycleType(CycleType.MONTHLY);
+                                    System.out.println("해당 목록의 주기를 매월로 " +
+                                            "변경하였습니다.");
+                                    showRegularList(regulerList);
+                                    return;
+                                }// 일반일때, 둘 중 하나는 존재.
+                                else{
+                                    LocalDateTime start = null;
+                                    LocalDateTime end = null;
+                                    if(todo.isHasDeadline()){
+                                        end = LocalDateTime.of(todo.getDeadline(),
+                                                        todo.getDeadTime());
+                                    }
+                                    if(todo.isCanCheckAfterCheckStartDate()){
+                                        start = LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+
+                                    }
+                                    // 둘다 설정되어있으면 구간 확인 필요
+                                    List<TodoList> newList = new ArrayList<>();
+                                    if(start != null && end != null){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularJob(start,
+                                                    end)){
+                                                System.out.println("일정이 겹처 주기를 " +
+                                                        "변경할 수 없습니다.");
+                                                continue;
+                                            }else{
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                todo.getTitle(),
+                                                                true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N,
+                                                                true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                todo.isCanCheckAfterDeadline()
+                                                        );
+                                                newList.add(newTodo);
+                                            }
+                                            end = end.plusMonths(1);
+                                            start = start.plusMonths(1);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleType(CycleType.MONTHLY);
+                                        System.out.println("해당 목록의 주기를 매월로 " +
+                                                "변경하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(start == null){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            end = end.plusMonths(1);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleType(CycleType.MONTHLY);
+                                        System.out.println("해당 목록의 주기를 매월로 " +
+                                                "변경하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(end == null){
+                                        while(start.isBefore(regularList.getCycleEnd())){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            start = start.plusMonths(1);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleType(CycleType.MONTHLY);
+                                        System.out.println("해당 목록의 주기를 매월로 " +
+                                                "변경하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                }
+                            }
+                            else{
+                                System.out.println("해당 할일은 월단위 반복입니다.");
+                                if(!getConfirm("매주 반복으로")){
+                                    System.out.println("이전단계로 돌아갑니다.");
+                                    continue outerLoop2;
+                                }
+                                TodoList todo = lists.getFirst();
+                                // 바쁨일때
+                                if(todo.getBusy() == BusyType.BUSY_Y){
+                                    LocalDateTime start =
+                                            LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+                                    LocalDateTime end =
+                                            LocalDateTime.of(todo.getDeadline(),
+                                                    todo.getDeadTime());
+                                    List<TodoList> newList = new ArrayList<>();
+                                    while(end.isBefore(regularList.getCycleEnd())){
+                                        if(!checkCreateRegularBusyJob(start,
+                                                end)){
+                                            System.out.println("일정이 겹처 주기를 " +
+                                                    "변경할 수 없습니다.");
+                                            continue;
+                                        }else{
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_Y, true,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                        }
+                                        end = end.plusDays(7);
+                                        start = start.plusDays(7);
+                                    }
+                                    regularList.setTodoList(newList);
+                                    regularList.setCycleType(CycleType.WEEKLY);
+                                    System.out.println("해당 목록의 주기를 매주로 " +
+                                            "변경하였습니다.");
+                                    showRegularList(regulerList);
+                                    return;
+                                }// 일반일때, 둘 중 하나는 존재.
+                                else{
+                                    LocalDateTime start = null;
+                                    LocalDateTime end = null;
+                                    if(todo.isHasDeadline()){
+                                        end = LocalDateTime.of(todo.getDeadline(),
+                                                todo.getDeadTime());
+                                    }
+                                    if(todo.isCanCheckAfterCheckStartDate()){
+                                        start = LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+
+                                    }
+                                    // 둘다 설정되어있으면 구간 확인 필요
+                                    List<TodoList> newList = new ArrayList<>();
+                                    if(start != null && end != null){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            if(!checkCreateRegularJob(start,
+                                                    end)){
+                                                System.out.println("일정이 겹처 주기를 " +
+                                                        "변경할 수 없습니다.");
+                                                continue;
+                                            }else{
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                todo.getTitle(),
+                                                                true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N,
+                                                                true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                todo.isCanCheckAfterDeadline()
+                                                        );
+                                                newList.add(newTodo);
+                                            }
+                                            end = end.plusDays(7);
+                                            start = start.plusDays(7);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleType(CycleType.WEEKLY);
+                                        System.out.println("해당 목록의 주기를 매주로 " +
+                                                "변경하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(start == null){
+                                        while(end.isBefore(regularList.getCycleEnd())){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            end = end.plusDays(7);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleType(CycleType.WEEKLY);
+                                        System.out.println("해당 목록의 주기를 매주로 " +
+                                                "변경하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(end == null){
+                                        while(start.isBefore(regularList.getCycleEnd())){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            start = start.plusDays(7);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleType(CycleType.WEEKLY);
+                                        System.out.println("해당 목록의 주기를 매주로 " +
+                                                "변경하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }else if(aim.equals("end")){
+                        while(true){
+                            System.out.println(regularList.getCycleEnd() +
+                                    "해당 목록의 마감시간입니다.");
+                            if(!getConfirm("마감시간을 변경해서")){
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                continue outerLoop2;
+                            }
+                            // 목록의 가장 앞 할일의 기한 가져오기 
+                            TodoList todo = lists.getFirst();
+                            LocalDate firstDate;
+                            LocalTime firstTime;
+                            if(todo.isHasDeadline()){
+                                firstDate = todo.getDeadline();
+                                firstTime = todo.getDeadTime();
+                            }else{
+                                firstDate = todo.getCheckStartDate();
+                                firstTime = todo.getCheckStartTime();
+                            }
+                            // 반복마감시간 입력받기
+                            LocalDate cDate = getDeadlineDate("반복 마감일을",
+                                    firstDate);
+                            if(cDate == null){
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                continue outerLoop2;
+                            }
+                            LocalTime cTime = getDeadlineTime(firstDate,cDate,
+                                    firstTime, "반복 마감시간을");
+                            if(cTime == null){
+                                System.out.println("이전 단계로 돌아갑니다.");
+                                continue outerLoop2;
+                            }
+                            LocalDateTime cycleEnd = LocalDateTime.of(cDate, cTime);
+                            List<TodoList> newList = new ArrayList<>();
+                            if(regularList.getCycleType() == CycleType.WEEKLY){
+                                // 바쁨일때
+                                if(todo.getBusy() == BusyType.BUSY_Y){
+                                    LocalDateTime start =
+                                            LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+                                    LocalDateTime end =
+                                            LocalDateTime.of(todo.getDeadline(),
+                                                    todo.getDeadTime());
+                                    while(end.isBefore(cycleEnd)){
+                                        if(!checkCreateRegularBusyJob(start,
+                                                end)){
+                                            System.out.println("일정이 겹처 주기를 " +
+                                                    "변경할 수 없습니다.");
+                                            continue;
+                                        }else{
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_Y, true,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                        }
+                                        end = end.plusDays(7);
+                                        start = start.plusDays(7);
+                                    }
+                                    regularList.setTodoList(newList);
+                                    regularList.setCycleEnd(cycleEnd);
+                                    System.out.println("마감일을 "+cycleEnd+"로 " +
+                                            "수정하였습니다.");
+                                    showRegularList(regulerList);
+                                    return;
+                                }// 일반일때, 둘 중 하나는 존재.
+                                else{
+                                    LocalDateTime start = null;
+                                    LocalDateTime end = null;
+                                    if(todo.isHasDeadline()){
+                                        end = LocalDateTime.of(todo.getDeadline(),
+                                                todo.getDeadTime());
+                                    }
+                                    if(todo.isCanCheckAfterCheckStartDate()){
+                                        start = LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+
+                                    }
+                                    // 둘다 설정되어있으면 구간 확인 필요
+                                    if(start != null && end != null){
+                                        while(end.isBefore(cycleEnd)){
+                                            if(!checkCreateRegularJob(start,
+                                                    end)){
+                                                System.out.println("일정이 겹처 주기를 " +
+                                                        "변경할 수 없습니다.");
+                                                continue;
+                                            }else{
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                todo.getTitle(),
+                                                                true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N,
+                                                                true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                todo.isCanCheckAfterDeadline()
+                                                        );
+                                                newList.add(newTodo);
+                                            }
+                                            end = end.plusDays(7);
+                                            start = start.plusDays(7);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleEnd(cycleEnd);
+                                        System.out.println("마감일을 "+cycleEnd+"로 " +
+                                                "수정하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(start == null){
+                                        while(end.isBefore(cycleEnd)){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            end = end.plusDays(7);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleEnd(cycleEnd);
+                                        System.out.println("마감일을 "+cycleEnd+"로 " +
+                                                "수정하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(end == null){
+                                        while(start.isBefore(cycleEnd)){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            start = start.plusDays(7);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleEnd(cycleEnd);
+                                        System.out.println("마감일을 "+cycleEnd+"로 " +
+                                                "수정하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                }
+                            }
+                            else{
+                                // 바쁨일때
+                                if(todo.getBusy() == BusyType.BUSY_Y){
+                                    LocalDateTime start =
+                                            LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+                                    LocalDateTime end =
+                                            LocalDateTime.of(todo.getDeadline(),
+                                                    todo.getDeadTime());
+                                    while(end.isBefore(cycleEnd)){
+                                        if(!checkCreateRegularBusyJob(start,
+                                                end)){
+                                            System.out.println("일정이 겹처 마감일를 " +
+                                                    "변경할 수 없습니다.");
+                                            continue;
+                                        }else{
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_Y, true,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                        }
+                                        end = end.plusMonths(1);
+                                        start = start.plusMonths(1);
+                                    }
+                                    regularList.setTodoList(newList);
+                                    regularList.setCycleEnd(cycleEnd);
+                                    System.out.println("마감일을 "+cycleEnd+"로 " +
+                                            "수정하였습니다.");
+                                    showRegularList(regulerList);
+                                    return;
+                                }// 일반일때, 둘 중 하나는 존재.
+                                else{
+                                    LocalDateTime start = null;
+                                    LocalDateTime end = null;
+                                    if(todo.isHasDeadline()){
+                                        end = LocalDateTime.of(todo.getDeadline(),
+                                                todo.getDeadTime());
+                                    }
+                                    if(todo.isCanCheckAfterCheckStartDate()){
+                                        start = LocalDateTime.of(todo.getCheckStartDate(),todo.getCheckStartTime());
+
+                                    }
+                                    // 둘다 설정되어있으면 구간 확인 필요
+                                    if(start != null && end != null){
+                                        while(end.isBefore(cycleEnd)){
+                                            if(!checkCreateRegularJob(start,
+                                                    end)){
+                                                System.out.println("일정이 겹처 " +
+                                                        "마감일을" +
+                                                        " " +
+                                                        "변경할 수 없습니다.");
+                                                continue;
+                                            }else{
+                                                TodoList newTodo =
+                                                        TodoList.createRegularList(
+                                                                todo.getTitle(),
+                                                                true,
+                                                                end.toLocalDate(),
+                                                                end.toLocalTime(),
+                                                                BusyType.BUSY_N,
+                                                                true,
+                                                                start.toLocalDate(),
+                                                                start.toLocalTime(),
+                                                                todo.isCanCheckAfterDeadline()
+                                                        );
+                                                newList.add(newTodo);
+                                            }
+                                            end = end.plusMonths(1);
+                                            start = start.plusMonths(1);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleEnd(cycleEnd);
+                                        System.out.println("마감일을 "+cycleEnd+"로 " +
+                                                "수정하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(start == null){
+                                        while(end.isBefore(cycleEnd)){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            true,
+                                                            end.toLocalDate(),
+                                                            end.toLocalTime(),
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            end = end.plusMonths(1);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleEnd(cycleEnd);
+                                        System.out.println("마감일을 "+cycleEnd+"로 " +
+                                                "수정하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                    if(end == null){
+                                        while(start.isBefore(cycleEnd)){
+                                            TodoList newTodo =
+                                                    TodoList.createRegularList(
+                                                            todo.getTitle(),
+                                                            false,
+                                                            null,
+                                                            null,
+                                                            BusyType.BUSY_N,
+                                                            false,
+                                                            start.toLocalDate(),
+                                                            start.toLocalTime(),
+                                                            todo.isCanCheckAfterDeadline()
+                                                    );
+                                            newList.add(newTodo);
+                                            start = start.plusMonths(1);
+                                        }
+                                        regularList.setTodoList(newList);
+                                        regularList.setCycleEnd(cycleEnd);
+                                        System.out.println("마감일을 "+cycleEnd+"로 " +
+                                                "수정하였습니다.");
+                                        showRegularList(regulerList);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    } else{
                         System.out.println("잘못 입력하셨습니다.");
                     }
                 }
             }
         }
     }
+
+    private List<TodoList> createRegularList(TodoList list, LocalDateTime start,
+                                             LocalDateTime end,
+                                             LocalDateTime cycleEnd,
+                                             CycleType type) {
+        List<TodoList> result = new ArrayList<>();
+        while(end.isBefore(cycleEnd)){
+            if(list.getBusy() == BusyType.BUSY_Y){
+                if(!checkCreateRegularBusyJob(start,end)){
+                    System.out.println("일정이 겹처 " +
+                            "수정할 수 없습니다.");
+                    return null;
+                }
+            }else if(list.getBusy() == BusyType.BUSY_N){
+                if(!checkCreateRegularJob(start,end)){
+                    System.out.println("일정이 겹처 " +
+                            "수정할 수 없습니다.");
+                    return null;
+                }
+            }
+            // 할일 생성 및 리스트에 추가
+            TodoList newTodo =
+                    TodoList.createRegularList(
+                            list.getTitle(), true,
+                            end.toLocalDate(),
+                            end.toLocalTime(),
+                            list.getBusy(), true,
+                            start.toLocalDate(),
+                            start.toLocalTime(),
+                            list.isCanCheckAfterDeadline()
+                    );
+            result.add(newTodo);
+            if(type == CycleType.WEEKLY){
+                start = start.plusDays(7);
+                end = end.plusDays(7);
+            }else{
+                start = start.plusMonths(1);
+                end = end.plusMonths(1);
+            }
+        }
+        return result;
+    }
+
     // 할일 체크하기 메소드
     public void checkList(List<TodoList> todoList) {
         System.out.println("======== 할 일 체크 및 해제하기 ========");
@@ -1288,8 +2213,7 @@ public class TodoListManager {
                                             );
                                         }
                                         newList.add(newTodo);
-                                        currStart = currStart.plusDays(7);
-                                        currEnd = currEnd.plusDays(7);
+                                        dateTime = dateTime.plusDays(7);
                                     }
                                 }else{
                                     while(dateTime.isBefore(cycleEnd)){
@@ -1317,8 +2241,7 @@ public class TodoListManager {
                                             );
                                         }
                                         newList.add(newTodo);
-                                        currStart = currStart.plusMonths(1);
-                                        currEnd = currEnd.plusMonths(1);
+                                        dateTime = dateTime.plusMonths(1);
                                     }
                                 }
 
@@ -1343,7 +2266,6 @@ public class TodoListManager {
             }
         }
     }
-
     // 바쁨 할일 생성
     private boolean checkCreateRegularBusyJob(LocalDateTime currStart,
                                               LocalDateTime currEnd) {
@@ -1563,7 +2485,7 @@ public class TodoListManager {
                 }
                 count++;
             }
-            System.out.println("------------");
+            System.out.println("---------------------------");
             dix++;
         }
         System.out.println("==============================\n");
