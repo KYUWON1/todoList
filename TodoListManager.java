@@ -64,8 +64,8 @@ public class TodoListManager {
                         System.out.println("이전 단계로 돌아갑니다.");
                         continue outerLoop2;
                     }
-                    startTime = getDeadlineTime(startDate,
-                            deadlineDate,
+                    startTime = getDeadlineTime(deadlineDate,
+                            startDate,
                             deadlineTime,"시작시간");
                     if(startTime == null){
                         System.out.println("이전 단계로 돌아갑니다.");

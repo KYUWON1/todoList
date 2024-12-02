@@ -78,7 +78,7 @@ public class Main {
         while(true){
             System.out.println("오늘 날짜를 입력해주세요.(YYYYMMDD): ");
             String input = sc.nextLine();
-            if(!inputManager.checkDateVaildation(input) || !inputManager.isNumeric(input))
+            if(!inputManager.isNumeric(input) || !inputManager.checkDateVaildation(input))
                 continue;
             LocalDate today =
                     inputManager.stringToLocalDate(inputManager.formatDate(input));
