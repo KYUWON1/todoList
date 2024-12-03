@@ -96,7 +96,7 @@ public class Main {
                 continue;
             LocalTime time =
                     inputManager.stringToLocalTime(inputManager.formatTime(input));
-            if(inputManager.checkTimeIsAfter(time,timeNow,
+            if(inputManager.checkTimeIsAfter(timeNow,time,
                     dateNow,beforeDate)){
                 timeNow = time;
                 System.out.println("오늘의 시간 : " + timeNow);

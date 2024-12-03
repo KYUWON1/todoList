@@ -28,12 +28,27 @@ public class InputManager {
         return true;
     }
     // 초기에 입력한 날짜보다 이전인지 확인하는 메소드
-    public boolean  checkDateIsAfter(LocalDate date,LocalDate dateNow){
+    public boolean checkDateIsAfter(LocalDate date,LocalDate dateNow){
+        System.out.println("현재:" + dateNow);
+        System.out.println("입력:" + date);
         if(dateNow == null){
             return true;
         }
         if(date.isBefore(dateNow)){
             System.out.println(dateNow + " 보다 이전의 날짜는 허용되지않습니다.");
+            return false;
+        }
+        return true;
+    }
+    // 초기에 입력한 날짜보다 이전인지 확인하는 메소드
+    public boolean checkDateIsBefore(LocalDate date,LocalDate dateNow){
+        System.out.println("현재:" + dateNow);
+        System.out.println("입력:" + date);
+        if(dateNow == null){
+            return true;
+        }
+        if(date.isAfter(dateNow)){
+            System.out.println(dateNow + " 보다 이후의 날짜는 허용되지않습니다.");
             return false;
         }
         return true;
@@ -62,6 +77,8 @@ public class InputManager {
     public boolean checkTimeIsAfter(LocalTime time,LocalTime timeNow,
                                     LocalDate today,
                                     LocalDate dateNow){
+        System.out.println("현재:" + time);
+        System.out.println("입력:" + timeNow);
         // 이전 시간이 없으면 굳이 비교 x
         if(timeNow == null){
             return true;
@@ -70,8 +87,28 @@ public class InputManager {
         if(today.isAfter(dateNow)){
             return true;
         }
-        if(timeNow.isAfter(time)){
-            System.out.println(timeNow + "보다 이전의 시간은 허용되지않습니다.");
+        if(today.isEqual(dateNow) && timeNow.isBefore(time)){
+            System.out.println(time + "보다 이전의 시간은 허용되지않습니다.");
+            return false;
+        }
+        return true;
+    }
+    // 시간 이전인가 체크
+    public boolean checkTimeIsBefore(LocalTime timeNow,LocalTime time,
+                                    LocalDate today,
+                                    LocalDate dateNow){
+        System.out.println("현재:" + timeNow);
+        System.out.println("입력:" + time);
+        // 이전 시간이 없으면 굳이 비교 x
+        if(timeNow == null){
+            return true;
+        }
+        // 입력으로 받은 날짜가 기준 날짜보다 이후이면,시간 상관 x
+        if(today.isBefore(dateNow)){
+            return true;
+        }
+        if(today.equals(dateNow) && time.isAfter(timeNow)){
+            System.out.println(timeNow + "보다 이후의 시간은 허용되지않습니다.");
             return false;
         }
         return true;
