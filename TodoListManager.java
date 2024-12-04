@@ -324,24 +324,24 @@ public class TodoListManager {
                                     System.out.println("이전 단계로 돌아갑니다.");
                                     continue outerLoop2;
                                 }
-                                startDate = getStartDate("시작날짜",dateNow);
+                                startDate = getStartDate("시작날짜",null);
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
                                 startTime = getStartTime(startDate,
-                                        dateNow,timeNow,
+                                        null,null,
                                         "시작시간");
                                 if (startTime == null) {
                                     continue outerLoop2;
                                 }
                             }else{
                                 System.out.println("시작날짜가 설정되어있습니다. 시작날짜를 변경합니다.");
-                                startDate = getStartDate("시작날짜",dateNow);
+                                startDate = getStartDate("시작날짜",null);
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
                                 startTime = getStartTime(startDate,
-                                        dateNow,timeNow,
+                                        null,null,
                                         "시작시간");
                                 if (startTime == null) {
                                     continue outerLoop2;
@@ -592,12 +592,12 @@ public class TodoListManager {
                                     System.out.println("이전 단계로 돌아갑니다.");
                                     continue outerLoop2;
                                 }
-                                startDate = getStartDate("시작날짜",dateNow);
+                                startDate = getStartDate("시작날짜",null);
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
                                 startTime =
-                                        getStartTime(startDate,dateNow,timeNow,
+                                        getStartTime(startDate,null,null,
                                                 "시작시간");
                                 if(startTime == null){
                                     continue outerLoop2;
@@ -605,12 +605,12 @@ public class TodoListManager {
                             }else {
                                 System.out.println("설정된 시작날짜가 존재합니다. 시작날짜를 " +
                                         "변경합니다.");
-                                startDate = getStartDate("시작날짜",dateNow);
+                                startDate = getStartDate("시작날짜",null);
                                 if(startDate == null){
                                     continue outerLoop2;
                                 }
                                 startTime =
-                                        getStartTime(startDate,dateNow,timeNow,
+                                        getStartTime(startDate,null,null,
                                                 "시작시간");
                                 if(startTime == null){
                                     continue outerLoop2;
@@ -819,7 +819,7 @@ public class TodoListManager {
                                 System.out.println("이전 단계로 돌아갑니다.");
                                 continue outerLoop2;
                             }
-                            // 목록의 가장 앞 할일의 기한 가져오기 
+                            // 목록의 가장 앞 할일의 기한 가져오기
                             TodoList todo = lists.getFirst();
                             LocalDate firstDate = null;
                             LocalTime firstTime = null;
@@ -1279,7 +1279,8 @@ public class TodoListManager {
                     List<TodoList> newTodoList = createRegularList(newTodo,
                             start, end, cycleEnd, cType);
                     if(newTodoList == null){
-                        continue outerLoop3;
+                        // 다시 마감일 입력받아야함
+                        continue outerLoop1;
                     }
                     // 새로운 반복 할일용 자료구조에 추가하고 끝
                     regulerList.add(new RegularList(newTodoList,cType,title,cycleEnd));
@@ -1614,20 +1615,6 @@ public class TodoListManager {
     private boolean getConfirm(String text) {
         while (true) {
             System.out.println(text + " 설정하시겠습니까? (Y/N)");
-            String input = sc.nextLine();
-            if (input.equalsIgnoreCase("Y")) {
-                return true;
-            } else if (input.equalsIgnoreCase("N")) {
-                return false;
-            } else {
-                System.out.println("Y 또는 N을 정확하게 입력해주세요.");
-            }
-        }
-    }
-    // 사용자 확인 받기
-    private boolean getConfirmFull(String text) {
-        while (true) {
-            System.out.println(text);
             String input = sc.nextLine();
             if (input.equalsIgnoreCase("Y")) {
                 return true;
