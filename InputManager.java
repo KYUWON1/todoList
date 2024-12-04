@@ -80,7 +80,7 @@ public class InputManager {
         System.out.println("현재:" + time);
         System.out.println("입력:" + timeNow);
         // 이전 시간이 없으면 굳이 비교 x
-        if(timeNow == null){
+        if(time == null){
             return true;
         }
         // 입력으로 받은 날짜가 기준 날짜보다 이후이면,시간 상관 x

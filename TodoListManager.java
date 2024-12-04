@@ -159,13 +159,14 @@ public class TodoListManager {
                     }else{
                         if(getConfirm("체크 가능 시작시점을")) {
                             // 바쁨할일 x, 마감기한 x, 마감체크 x, 체크시작 o
-                            startDate = getStartDate("시작날짜",dateNow);
+                            // 시작시점지정하는데, 이후에 하든 이전에 하든 상관없다.
+                            startDate = getStartDate("시작날짜",null);
                             if(startDate == null){
                                 System.out.println("이전 단계로 돌아갑니다.");
                                 continue outerLoop2;
                             }
-                            startTime = getStartTime(startDate,dateNow,
-                                    timeNow,
+                            startTime = getStartTime(startDate,null,
+                                    null,
                                     "시작시간");
                             if(startTime == null){
                                 System.out.println("이전 단계로 돌아갑니다.");
@@ -1148,20 +1149,21 @@ public class TodoListManager {
                         continue outerLoop0;
                     }
                     start = LocalDateTime.of(startDate,startTime);
-                    if(end.isAfter(start)){
-                        System.out.println("마감일은 시작일보다 이후일 수 없습니다.");
+                    if(start.isAfter(end)){
+                        System.out.println("시작일은 마감일보다 이후일 수 없습니다.");
                         continue outerLoop1;
                     }
                     // 주기에 따른 제한범위 체크
                     if(cType == CycleType.MONTHLY){
-                        if(!checkMonthGap(start,end)){
+                        // 시작시간 마감시간
+                        if(checkMonthGap(start,end)){
                             System.out.println("마감일과 체크 가능 시작일이 월단위 주기범위를" +
                                     " " +
                                     "넘을수는 없습니다.");
                             continue ;
                         }
                     }else if(cType == CycleType.WEEKLY){
-                        if(!checkWeekGap(start,end)){
+                        if(checkWeekGap(start,end)){
                             System.out.println("마감일과 체크 가능 시작일이 주단위 주기범위를" +
                                     " " +
                                     "넘을수는 없습니다.");
@@ -1199,16 +1201,20 @@ public class TodoListManager {
                             }
                             start = LocalDateTime.of(startDate,
                                     startTime);
+                            if(start.isAfter(end)){
+                                System.out.println("시작일은 마감일보다 이후일 수 없습니다.");
+                                continue outerLoop1;
+                            }
                             // 주기에 따른 제한범위 체크
                             if(cType == CycleType.MONTHLY){
-                                if(!checkMonthGap(start,end)){
+                                if(checkMonthGap(start,end)){
                                     System.out.println("마감일과 체크 가능 시작일이 월단위 주기범위를" +
                                             " " +
                                             "넘을수는 없습니다.");
                                     continue ;
                                 }
                             }else if(cType == CycleType.WEEKLY){
-                                if(!checkWeekGap(start,end)){
+                                if(checkWeekGap(start,end)){
                                     System.out.println("마감일과 체크 가능 시작일이 주단위 주기범위를" +
                                             " " +
                                             "넘을수는 없습니다.");
@@ -1228,12 +1234,12 @@ public class TodoListManager {
                     }else{
                         System.out.println("마감일을 설정하지않으셨습니다. ");
                         System.out.println("체크가능 시점을 입력해주세요.");
-                        startDate = getStartDate("체크가능 시작일을",dateNow);
+                        startDate = getStartDate("체크가능 시작일을",null);
                         if(startDate == null){
                             continue outerLoop0;
                         }
-                        startTime = getStartTime(dateNow,startDate,
-                                timeNow,"체크가능 시점을");
+                        startTime = getStartTime(startDate,null,
+                                null,"체크가능 시점을");
                         if(startTime == null){
                             continue outerLoop0;
                         }
@@ -1294,7 +1300,14 @@ public class TodoListManager {
                                              CycleType type) {
         // 시작일 또는 마감일이 null 일때는?
         List<TodoList> result = new ArrayList<>();
-        while(end.isBefore(cycleEnd)){
+        LocalDateTime standard = null;
+        if(start != null){
+            standard = start;
+        }
+        if(end != null){
+            standard = end;
+        }
+        while(standard.isBefore(cycleEnd)){
             if(end != null && start != null){
                 if(list.getBusy() == BusyType.BUSY_Y){
                     if(!checkCreateRegularBusyJob(start,end)){
@@ -1341,11 +1354,13 @@ public class TodoListManager {
                     );
             result.add(newTodo);
             if(type == CycleType.WEEKLY){
+                standard = standard.plusDays(7);
                 if(start != null)
                     start = start.plusDays(7);
                 if(end != null)
                     end = end.plusDays(7);
             }else{
+                standard = standard.plusMonths(1);
                 if(start != null)
                     start = start.plusMonths(1);
                 if(end != null)
@@ -1448,6 +1463,8 @@ public class TodoListManager {
     // 한달차이 확인
     private boolean checkMonthGap(LocalDateTime start,LocalDateTime end){
         LocalDateTime afterMonth = start.plusMonths(1);
+        System.out.println("1달뒤 :" + afterMonth);
+        System.out.println("종료일 : " + end);
         // 마감이 한달뒤보다 같거나, 이전일때 false 반환
         return end.isAfter(afterMonth);
     }
