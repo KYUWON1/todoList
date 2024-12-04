@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -1205,22 +1206,6 @@ public class TodoListManager {
                                 System.out.println("시작일은 마감일보다 이후일 수 없습니다.");
                                 continue outerLoop1;
                             }
-                            // 주기에 따른 제한범위 체크
-                            if(cType == CycleType.MONTHLY){
-                                if(checkMonthGap(start,end)){
-                                    System.out.println("마감일과 체크 가능 시작일이 월단위 주기범위를" +
-                                            " " +
-                                            "넘을수는 없습니다.");
-                                    continue ;
-                                }
-                            }else if(cType == CycleType.WEEKLY){
-                                if(checkWeekGap(start,end)){
-                                    System.out.println("마감일과 체크 가능 시작일이 주단위 주기범위를" +
-                                            " " +
-                                            "넘을수는 없습니다.");
-                                    continue ;
-                                }
-                            }
                             if(getConfirm("마감이후 체크 가능하도록 설정")){
                                 canCheckAfterD = true;
                             }
@@ -1300,6 +1285,8 @@ public class TodoListManager {
                                              LocalDateTime cycleEnd,
                                              CycleType type) {
         // 시작일 또는 마감일이 null 일때는?
+        // 바쁨일때 리스트의 이전 날짜의 마지막이 만들려는 시작일보다 이후이면 불가능
+        // 날짜 정보 조건 추가해야함
         List<TodoList> result = new ArrayList<>();
         LocalDateTime standard = null;
         if(start != null){
@@ -1389,9 +1376,9 @@ public class TodoListManager {
                 }
             }else{
                 if(list.isHasDeadline() && list.isCanCheckAfterCheckStartDate()){
-                    LocalDateTime st = LocalDateTime.of(list.getDeadline(),
+                    LocalDateTime ed = LocalDateTime.of(list.getDeadline(),
                             list.getDeadTime());
-                    LocalDateTime ed =
+                    LocalDateTime st =
                             LocalDateTime.of(list.getCheckStartDate(),
                                     list.getCheckStartTime());
                     if(st.isAfter(currStart) && ed.isBefore(currEnd)){
@@ -1414,9 +1401,9 @@ public class TodoListManager {
                     }
                 }else{
                     if(list.isHasDeadline() && list.isCanCheckAfterCheckStartDate()){
-                        LocalDateTime st = LocalDateTime.of(list.getDeadline(),
+                        LocalDateTime ed = LocalDateTime.of(list.getDeadline(),
                                 list.getDeadTime());
-                        LocalDateTime ed =
+                        LocalDateTime st =
                                 LocalDateTime.of(list.getCheckStartDate(),
                                         list.getCheckStartTime());
                         if(st.isAfter(currStart) && ed.isBefore(currEnd)){
@@ -1461,13 +1448,13 @@ public class TodoListManager {
         // 모든 리스트에서 문제가 없으면 true
         return true;
     }
-    // 한달차이 확인
+    // 한달차이 확인 -> 31일만 안넘으면 되는걸로 제한
     private boolean checkMonthGap(LocalDateTime start,LocalDateTime end){
-        LocalDateTime afterMonth = start.plusMonths(1);
-        System.out.println("1달뒤 :" + afterMonth);
+        long between = ChronoUnit.DAYS.between(start, end);
+        System.out.println("날짜 차이" + between);
+        System.out.println("시작일 : " + start);
         System.out.println("종료일 : " + end);
-        // 마감이 한달뒤보다 같거나, 이전일때 false 반환
-        return end.isAfter(afterMonth);
+        return between > 31;
     }
     // 일주일 확인
     private boolean checkWeekGap(LocalDateTime start,LocalDateTime end){
