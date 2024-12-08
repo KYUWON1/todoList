@@ -1694,8 +1694,11 @@ public class TodoListManager {
                                      LocalDate startDate,LocalTime startTime
     ){
         // START와 END는 바쁨할일
-        LocalDateTime start = LocalDateTime.of(endDate,endTime);
-        LocalDateTime end = LocalDateTime.of(startDate,startTime);
+        System.out.println("일반 바쁨할일이 생성가능한지 확인합니다..");
+        LocalDateTime end = LocalDateTime.of(endDate,endTime);
+        LocalDateTime start = LocalDateTime.of(startDate,startTime);
+        System.out.println("들어온 시작 날짜:" + start);
+        System.out.println("들어온 마감 날짜:" + end);
         for(TodoList list : todoList){
             // 바쁨 할일과 비교
             if (list.getBusy().equals(BusyType.BUSY_Y)) {
@@ -1703,11 +1706,17 @@ public class TodoListManager {
                         ,list.getCheckStartTime());
                 LocalDateTime todoEnd = LocalDateTime.of(list.getDeadline(),
                         list.getDeadTime());
+                System.out.println("기존 바쁨 시작:" + todoStart);
+                System.out.println("시존 바쁨 마감:" + todoEnd);
                 // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
-                if(start.isAfter(todoStart) && start.isBefore(todoEnd))
+                if(start.isAfter(todoStart) && start.isBefore(todoEnd)){
+                    System.out.println("바쁨일정과 겹칩니다!");
                     return false;
-                if(end.isAfter(todoStart) && end.isBefore(todoEnd))
+                }
+                if(end.isAfter(todoStart) && end.isBefore(todoEnd)){
+                    System.out.println("바쁨일정과 겹칩니다!");
                     return false;
+                }
             }
             // 안바쁨 할일과 비교, 마감일이나, 시작일이 없으면, 무한대임으로 검증필요 x
             else{
@@ -1716,9 +1725,13 @@ public class TodoListManager {
                             ,list.getCheckStartTime());
                     LocalDateTime todoEnd = LocalDateTime.of(list.getDeadline(),
                             list.getDeadTime());
+                    System.out.println("기존 바쁨 시작:" + todoStart);
+                    System.out.println("시존 바쁨 마감:" + todoEnd);
                     // 생성하려는 바쁨할일이 다 먹고있으면 안됨
-                    if(start.isBefore(todoStart) && end.isAfter(todoEnd))
+                    if(start.isBefore(todoStart) && end.isAfter(todoEnd)){
+                        System.out.println("일반 일정을 잡아먹습니다!");
                         return false;
+                    }
                 }
             }
         }
@@ -1730,11 +1743,17 @@ public class TodoListManager {
                             ,list.getCheckStartTime());
                     LocalDateTime todoEnd = LocalDateTime.of(list.getDeadline(),
                             list.getDeadTime());
+                    System.out.println("기존 바쁨 시작:" + todoStart);
+                    System.out.println("시존 바쁨 마감:" + todoEnd);
                     // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
-                    if(start.isAfter(todoStart) && start.isBefore(todoEnd))
+                    if(start.isAfter(todoStart) && start.isBefore(todoEnd)){
+                        System.out.println("바쁨일정과 겹칩니다!");
                         return false;
-                    if(end.isAfter(todoStart) && end.isBefore(todoEnd))
+                    }
+                    if(end.isAfter(todoStart) && end.isBefore(todoEnd)){
+                        System.out.println("바쁨일정과 겹칩니다!");
                         return false;
+                    }
                 }
                 // 안바쁨 할일과 비교, 마감일이나, 시작일이 없으면, 무한대임으로 검증필요 x
                 else{
@@ -1743,9 +1762,13 @@ public class TodoListManager {
                                 ,list.getCheckStartTime());
                         LocalDateTime todoEnd = LocalDateTime.of(list.getDeadline(),
                                 list.getDeadTime());
+                        System.out.println("기존 바쁨 시작:" + todoStart);
+                        System.out.println("시존 바쁨 마감:" + todoEnd);
                         // 생성하려는 바쁨할일이 다 먹고있으면 안됨
-                        if(start.isBefore(todoStart) && end.isAfter(todoEnd))
+                        if(start.isBefore(todoStart) && end.isAfter(todoEnd)){
+                            System.out.println("일반 일정을 잡아먹습니다!");
                             return false;
+                        }
                     }
                 }
             }
@@ -1755,8 +1778,11 @@ public class TodoListManager {
     // 일반 할일 생성시 생성 가능한지 확인하는 함수
     private boolean canCreateNormalJob(LocalDate date, LocalTime time, LocalDate startDate, LocalTime startTime){
         // 일반 할일의 시작과 끝
+        System.out.println("일반 안바쁨할일이 생성가능한지 확인합니다..");
         LocalDateTime end = LocalDateTime.of(date,time);
         LocalDateTime start = LocalDateTime.of(startDate,startTime);
+        System.out.println("들어온 마감 날짜 : " + end);
+        System.out.println("들어온 시작 날짜 : " + start);
         for(TodoList list : todoList){
             // 바쁨 할일만 고려하면됨
             if (list.getBusy().equals(BusyType.BUSY_Y)) {
@@ -1765,8 +1791,11 @@ public class TodoListManager {
                 LocalDateTime todoEnd = LocalDateTime.of(list.getDeadline(),
                         list.getDeadTime());
                 // 존재하는 바쁨 할일 사이에 구간이있으면 안됨
-                if(start.isAfter(todoStart) && end.isBefore(todoEnd))
+                if(start.isAfter(todoStart) && end.isBefore(todoEnd)){
+                    System.out.println("바쁨 할일에 잡아먹혀 생성 불가합니다.");
                     return false;
+                }
+
             }
         }
         for(RegularList lists : regulerList){
@@ -1778,8 +1807,10 @@ public class TodoListManager {
                     LocalDateTime todoEnd = LocalDateTime.of(list.getDeadline(),
                             list.getDeadTime());
                     // 존재하는 바쁨 할일 사이에 구간이있으면 안됨
-                    if(start.isAfter(todoStart) && end.isBefore(todoEnd))
+                    if(start.isAfter(todoStart) && end.isBefore(todoEnd)){
+                        System.out.println("바쁨 할일에 잡아먹혀 생성 불가합니다.");
                         return false;
+                    }
                 }
             }
         }
