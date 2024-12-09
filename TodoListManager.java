@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -253,8 +254,24 @@ public class TodoListManager {
                                     continue outerLoop2;
                                 }
                             }else {
-                                System.out.println("설정된 마감알이 존재합니다. 마감일을 " +
-                                        "변경합니다.");
+                                System.out.println("설정된 마감일이 존재합니다. 원하는 서비스를" +
+                                        " " +
+                                        "입력해주세요.");
+                                System.out.println("수정 : Y\n삭제 : N");
+                                if(!getConfirmYN()){
+                                    if(todo.getBusy() == BusyType.BUSY_Y){
+                                        System.out.println("바쁨은 시작일과 마감일이 " +
+                                                "필수입니다. ");
+                                        System.out.println("바쁨 설정을 먼저 변경해주세요.");
+                                        continue outerLoop2;
+                                    }
+                                    todo.setHasDeadline(false);
+                                    todo.setDeadline(null);
+                                    todo.setDeadTime(null);
+                                    todo.setCanCheckAfterDeadline(true);
+                                    System.out.println("마감일을 삭제하였습니다.");
+                                    return;
+                                }
                                 deadline = getDeadlineDate("마감날짜",dateNow);
                                 if(deadline == null){
                                     continue outerLoop2;
@@ -336,7 +353,22 @@ public class TodoListManager {
                                     continue outerLoop2;
                                 }
                             }else{
-                                System.out.println("시작날짜가 설정되어있습니다. 시작날짜를 변경합니다.");
+                                System.out.println("시작날짜가 설정되어있습니다. 원하는 서비스를 " +
+                                        "입력해주세요.");
+                                System.out.println("수정 : Y\n삭제 : N");
+                                if(!getConfirmYN()){
+                                    if(todo.getBusy() == BusyType.BUSY_Y){
+                                        System.out.println("바쁨은 시작일과 마감일이 " +
+                                                "필수입니다. ");
+                                        System.out.println("바쁨 설정을 먼저 변경해주세요.");
+                                        continue outerLoop2;
+                                    }
+                                    todo.setCanCheckAfterCheckStartDate(false);
+                                    todo.setCheckStartDate(null);
+                                    todo.setCheckStartTime(null);
+                                    System.out.println("시작일을 삭제하였습니다.");
+                                    return;
+                                }
                                 startDate = getStartDate("시작날짜",null);
                                 if(startDate == null){
                                     continue outerLoop2;
@@ -388,8 +420,6 @@ public class TodoListManager {
                         }
                     }else if(aim.equals("busy")){
                         while(true){
-                            LocalDateTime start = null;
-                            LocalDateTime end = null;
                             if(todo.getBusy() == BusyType.BUSY_N){
                                 LocalDate endDate = null;
                                 LocalTime endTime = null;
@@ -413,28 +443,26 @@ public class TodoListManager {
                                     if(endTime == null){
                                         continue;
                                     }
-                                    end = LocalDateTime.of(endDate,endTime);
                                 }else{
-                                    end = LocalDateTime.of(todo.getDeadline()
-                                            ,todo.getDeadTime());
+                                    endDate = todo.getDeadline();
+                                    endTime = todo.getDeadTime();
                                 }
                                 // 시작시간 확인
                                 if(!todo.isCanCheckAfterCheckStartDate()){
                                     System.out.println("바쁨할일은 시작일이 필수입니다.");
                                     startDate = getStartDate(
-                                            "마감일을",endDate);
+                                            "시작일을",endDate);
                                     if(startDate == null){
                                         continue;
                                     }
                                     startTime = getStartTime(endDate,startDate,
-                                                    endTime, "마감 시간을");
+                                                    endTime, "시작 시간을");
                                     if(startTime == null){
                                         continue;
                                     }
-                                    start = LocalDateTime.of(startDate,startTime);
                                 }else{
-                                    start = LocalDateTime.of(todo.getCheckStartDate()
-                                            ,todo.getCheckStartTime());
+                                    startDate = todo.getCheckStartDate();
+                                    startTime = todo.getCheckStartTime();
                                 }
                                 if(!canCreateBusyJob(endDate,endTime,startDate
                                         ,startTime)){
@@ -1191,12 +1219,12 @@ public class TodoListManager {
                         end = LocalDateTime.of(deadline,deadtime);
                         stdType = TYPE.DEAD;
                         if(getConfirm("체크가능 시작시점을 설정")){
-                            startDate = getStartDate("체크가능 시작일을",deadline);
+                            startDate = getStartDate("체크가능 시작일",deadline);
                             if(startDate == null){
                                 continue outerLoop0;
                             }
                             startTime = getStartTime(deadline,startDate,
-                                    deadtime,"체크가능 시점을");
+                                    deadtime,"체크가능 시점");
                             if(startTime == null){
                                 continue outerLoop0;
                             }
@@ -1219,12 +1247,12 @@ public class TodoListManager {
                     }else{
                         System.out.println("마감일을 설정하지않으셨습니다. ");
                         System.out.println("체크가능 시점을 입력해주세요.");
-                        startDate = getStartDate("체크가능 시작일을",null);
+                        startDate = getStartDate("체크가능 시작일",null);
                         if(startDate == null){
                             continue outerLoop0;
                         }
                         startTime = getStartTime(startDate,null,
-                                null,"체크가능 시점을");
+                                null,"체크가능 시점");
                         if(startTime == null){
                             continue outerLoop0;
                         }
@@ -1279,6 +1307,16 @@ public class TodoListManager {
             }
         }
     }
+    // 시작일과 마감일이 있나 확인하고 없으면 날짜 차이를 반환하는 함수
+    private int isValidDate(LocalDateTime dateTime){
+        YearMonth yearMonth = YearMonth.of(dateTime.getYear(),
+                dateTime.getMonth());
+        int maxDayOfMonth = yearMonth.lengthOfMonth();
+        if(dateTime.getDayOfMonth() > maxDayOfMonth){
+            return dateTime.getDayOfMonth() - maxDayOfMonth;
+        }
+        return 0;
+    }
     // 반복할일 만들어서 List 반환하는 함수
     private List<TodoList> createRegularList(TodoList list, LocalDateTime start,
                                              LocalDateTime end,
@@ -1289,13 +1327,42 @@ public class TodoListManager {
         // 날짜 정보 조건 추가해야함
         List<TodoList> result = new ArrayList<>();
         LocalDateTime standard = null;
+        Long startEndGap = 0L;
         if(start != null){
             standard = start;
         }
         if(end != null){
             standard = end;
         }
+        // 월반복이고, 시작일 마감일 설정시 최초 날짜의 차이를 계산
+        if(type == CycleType.MONTHLY && (start != null && end != null)){
+            startEndGap = ChronoUnit.DAYS.between(start, end);
+        }
         while(standard.isBefore(cycleEnd)){
+            // 시작일이 없을때
+            int validStart = isValidDate(start);
+            int validEnd = isValidDate(end);
+            if(validStart != 0 && validEnd != 0 ){
+                System.out.println("시작 마감일 둘다 없음. 해당 회차는 넘어갑니다.");
+                continue;
+            }
+            if(validStart != 0){
+                System.out.println("해당 시작일 없음. 날짜를 조정합니다.");
+                if(end == null){
+                    System.out.println("마감일을 설정하지않아서, 해당 회차는 넘어갑니다.");
+                    continue;
+                }
+                start = setDateByDays(validStart,start,end,DateType.START);
+            }
+
+            if(validEnd != 0){
+                System.out.println("해당 마감일 없음. 날짜를 조정합니다.");
+                if(start == null){
+                    System.out.println("시작일을 설정하지않아서, 해당 회차는 넘어갑니다.");
+                    continue;
+                }
+                end = setDateByDays(validStart,start,end,DateType.END);
+            }
             if(end != null && start != null){
                 if(list.getBusy() == BusyType.BUSY_Y){
                     if(!checkCreateRegularBusyJob(start,end)){
@@ -1348,15 +1415,33 @@ public class TodoListManager {
                 if(end != null)
                     end = end.plusDays(7);
             }else{
+                // 마감일에 1달 더하고, 위에 계산해놓았던 차이를 뺀게 시작일
                 standard = standard.plusMonths(1);
-                if(start != null)
-                    start = start.plusMonths(1);
                 if(end != null)
-                    end = end.plusMonths(1);
+                    end = start.plusMonths(1);
+                if(start != null)
+                    start = end.plusDays(startEndGap);
             }
         }
         return result;
     }
+
+    private LocalDateTime setDateByDays(int validStart, LocalDateTime start,
+                               LocalDateTime end,DateType type) {
+        // 시작일이 없을 경우 해당 달의 마지막부터 마이너스
+        if(type == DateType.START){
+            // 31일을 입력했는데, 28까지밖에없으면 이미 28로 등록됨으로 거기서 마이너스
+            return start.minusDays(validStart);
+        }// 마감일이 없을 경우 다음날부터 플러스
+        else if(type == DateType.END){
+            return end.plusDays(validStart);
+        }
+        else if(type == DateType.BOTH){
+
+        }
+        return null;
+    }
+
     // 바쁨 할일 생성 가능 확인 함수
     private boolean checkCreateRegularBusyJob(LocalDateTime currStart,
                                               LocalDateTime currEnd) {
@@ -1612,6 +1697,19 @@ public class TodoListManager {
             }
         }
     }
+    // 사용자 확인 받기
+    private boolean getConfirmYN() {
+        while (true) {
+            String input = sc.nextLine();
+            if (input.equalsIgnoreCase("Y")) {
+                return true;
+            } else if (input.equalsIgnoreCase("N")) {
+                return false;
+            } else {
+                System.out.println("Y 또는 N을 정확하게 입력해주세요.");
+            }
+        }
+    }
     // 마감일 입력받기
     private LocalDate getDeadlineDate(String type,LocalDate dateNow) {
         while (true) {
@@ -1709,12 +1807,8 @@ public class TodoListManager {
                 System.out.println("기존 바쁨 시작:" + todoStart);
                 System.out.println("시존 바쁨 마감:" + todoEnd);
                 // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
-                if(start.isAfter(todoStart) && start.isBefore(todoEnd)){
-                    System.out.println("바쁨일정과 겹칩니다!");
-                    return false;
-                }
-                if(end.isAfter(todoStart) && end.isBefore(todoEnd)){
-                    System.out.println("바쁨일정과 겹칩니다!");
+                if ((start.isBefore(todoEnd) && end.isAfter(todoStart))) {
+                    System.out.println("바쁨 일정과 겹칩니다!");
                     return false;
                 }
             }
@@ -1746,12 +1840,8 @@ public class TodoListManager {
                     System.out.println("기존 바쁨 시작:" + todoStart);
                     System.out.println("시존 바쁨 마감:" + todoEnd);
                     // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
-                    if(start.isAfter(todoStart) && start.isBefore(todoEnd)){
-                        System.out.println("바쁨일정과 겹칩니다!");
-                        return false;
-                    }
-                    if(end.isAfter(todoStart) && end.isBefore(todoEnd)){
-                        System.out.println("바쁨일정과 겹칩니다!");
+                    if ((start.isBefore(todoEnd) && end.isAfter(todoStart))) {
+                        System.out.println("바쁨 일정과 겹칩니다!");
                         return false;
                     }
                 }
