@@ -1692,7 +1692,8 @@ public class TodoListManager {
                 startTime = start.toLocalTime();
                 hasS = true;
             }
-            if(end != null && start != null){
+            if(end != null && start != null && startEndGap != 0){
+                System.out.println("날짜차이:" + startEndGap);
                 startDate = endDate.minusDays(startEndGap);
                 startTime = start.toLocalTime();
                 hasS = true;
@@ -1763,10 +1764,9 @@ public class TodoListManager {
                 LocalDateTime ed =
                         LocalDateTime.of(list.getCheckStartDate(),
                                 list.getCheckStartTime());
-                if(st.isAfter(currStart) && st.isBefore(currStart)){
-                    return false;
-                }
-                if(ed.isAfter(currEnd) && ed.isBefore(currEnd)){
+                // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
+                if ((st.isBefore(currEnd) || ed.isAfter(currStart))) {
+                    System.out.println("바쁨 일정과 겹칩니다!");
                     return false;
                 }
             }else{
@@ -1777,6 +1777,7 @@ public class TodoListManager {
                             LocalDateTime.of(list.getCheckStartDate(),
                                     list.getCheckStartTime());
                     if(st.isAfter(currStart) && ed.isBefore(currEnd)){
+                        System.out.println("일반 일정을 잡아먹습니다!");
                         return false;
                     }
                 }
@@ -1786,12 +1787,14 @@ public class TodoListManager {
         for(RegularList lists : regulerList){
             for(TodoList list : lists.getTodoList()){
                 if(list.getBusy().equals(BusyType.BUSY_Y)){
-                    LocalDateTime dateTime = LocalDateTime.of(list.getDeadline(),
+                    LocalDateTime st = LocalDateTime.of(list.getDeadline(),
                             list.getDeadTime());
-                    if(dateTime.isAfter(currStart) && dateTime.isBefore(currStart)){
-                        return false;
-                    }
-                    if(dateTime.isAfter(currEnd) && dateTime.isBefore(currEnd)){
+                    LocalDateTime ed =
+                            LocalDateTime.of(list.getCheckStartDate(),
+                                    list.getCheckStartTime());
+                    // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
+                    if ((st.isBefore(currEnd) || ed.isAfter(currStart))) {
+                        System.out.println("바쁨 일정과 겹칩니다!");
                         return false;
                     }
                 }else{
@@ -1802,6 +1805,7 @@ public class TodoListManager {
                                 LocalDateTime.of(list.getCheckStartDate(),
                                         list.getCheckStartTime());
                         if(st.isAfter(currStart) && ed.isBefore(currEnd)){
+                            System.out.println("일반 일정을 잡아먹습니다!");
                             return false;
                         }
                     }
@@ -2027,7 +2031,7 @@ public class TodoListManager {
             System.out.println("취소하려면 c 를 입력해주세요.");
             String input = sc.nextLine();
             if (input.equals("c")) {
-                return null;
+                return new DateResult(null,null);
             }
             if(!inputManager.checkDateVaildation(input) || !inputManager.isNumeric(input))
                 continue;
@@ -2046,7 +2050,7 @@ public class TodoListManager {
             System.out.println("취소하려면 c 를 입력해주세요.");
             String input = sc.nextLine();
             if (input.equals("c")) {
-                return null;
+                return new DateResult(null,null);
             }
             if(!inputManager.checkDateVaildation(input) || !inputManager.isNumeric(input))
                 continue;
@@ -2119,7 +2123,7 @@ public class TodoListManager {
                 System.out.println("기존 바쁨 시작:" + todoStart);
                 System.out.println("시존 바쁨 마감:" + todoEnd);
                 // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
-                if ((start.isBefore(todoEnd) && end.isAfter(todoStart))) {
+                if ((start.isBefore(todoEnd) || end.isAfter(todoStart))) {
                     System.out.println("바쁨 일정과 겹칩니다!");
                     return false;
                 }
@@ -2152,7 +2156,7 @@ public class TodoListManager {
                     System.out.println("기존 바쁨 시작:" + todoStart);
                     System.out.println("시존 바쁨 마감:" + todoEnd);
                     // 기존 할일의 시작일과 마감일 사이에 있으면 안됨
-                    if ((start.isBefore(todoEnd) && end.isAfter(todoStart))) {
+                    if ((start.isBefore(todoEnd) || end.isAfter(todoStart))) {
                         System.out.println("바쁨 일정과 겹칩니다!");
                         return false;
                     }
