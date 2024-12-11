@@ -1555,8 +1555,6 @@ public class TodoListManager {
         List<TodoList> result = new ArrayList<>();
         LocalDateTime start = null;
         LocalDateTime end = null;
-        System.out.println("변경전 마감일 : " + rawEnd);
-        System.out.println("변경전 시작일 : " + rawStart);
 
         if(startDay != null)
             start = startDay;
@@ -1593,6 +1591,8 @@ public class TodoListManager {
         int validEnd = 0;
         // 마감일 또는 시작일을 rawStart값으로 처음에 조정하는게 필요.
         while(standard.isBefore(cycleEnd)){
+            System.out.println("변경전 마감일 : " + rawEnd);
+            System.out.println("변경전 시작일 : " + rawStart);
             // 시작일 또는 마감일이 없으면 조정
             if(rawStart != null){
                 validStart = isValidDate(rawStart);
@@ -1607,13 +1607,6 @@ public class TodoListManager {
                 System.out.println("시작 마감일 둘다 없음. 해당 회차는 넘어갑니다.");
                 // 마감일에 1달 더하고, 위에 계산해놓았던 차이를 뺀게 시작일
                 standard = standard.plusMonths(1);
-                if(end != null)
-                    end = end.plusMonths(1);
-                if(start != null && end != null){
-                    start = end.minusDays(startEndGap);
-                }else if(start != null){
-                    start = start.plusMonths(1);
-                }
                 if(rawStart != null)
                     rawStart = addMonthToString(rawStart);
                 if(rawEnd != null)
@@ -1626,8 +1619,6 @@ public class TodoListManager {
                     System.out.println("마감일을 설정하지않아서, 해당 회차는 넘어갑니다.");
                     // 마감일에 1달 더하고, 위에 계산해놓았던 차이를 뺀게 시작일
                     standard = standard.plusMonths(1);
-                    if(start != null)
-                        start = start.plusMonths(1);
                     if(rawStart != null)
                         rawStart = addMonthToString(rawStart);
                     if(rawEnd != null)
@@ -1643,15 +1634,14 @@ public class TodoListManager {
                 if(start == null){
                     System.out.println("시작일을 설정하지않아서, 해당 회차는 넘어갑니다.");
                     standard = standard.plusMonths(1);
-                    if(end != null)
-                        end = end.plusMonths(1);
                     if(rawStart != null)
                         rawStart = addMonthToString(rawStart);
                     if(rawEnd != null)
                         rawEnd = addMonthToString(rawEnd);
                     continue;
                 }
-                end = setDateByDays(validStart,start,end,DateType.END);
+                end = setDateByDays(validEnd,start,end,DateType.END);
+                System.out.println("조정된 마감날짜 :" + end);
             }
 
             if(end != null && start != null){
@@ -1686,12 +1676,12 @@ public class TodoListManager {
                 startTime = start.toLocalTime();
                 hasS = true;
             }
-            if(end != null && start != null && startEndGap != 0){
-                System.out.println("날짜차이:" + startEndGap);
-                startDate = endDate.minusDays(startEndGap);
-                startTime = start.toLocalTime();
-                hasS = true;
-            }
+//            if(end != null && start != null && startEndGap != 0){
+//                System.out.println("날짜차이:" + startEndGap);
+//                startDate = endDate.minusDays(startEndGap);
+//                startTime = start.toLocalTime();
+//                hasS = true;
+//            }
             // 할일 생성 및 리스트에 추가
             TodoList newTodo =
                     TodoList.createRegularList(
@@ -1737,16 +1727,25 @@ public class TodoListManager {
         System.out.println(result);
         return result;
     }
-
+    // validStart는 해당 달의 마지막날을 기준으로 측정됨
     private LocalDateTime setDateByDays(int validStart, LocalDateTime start,
                                LocalDateTime end,DateType type) {
+        System.out.println("start : " + start);
+        System.out.println("end : " + end);
+        System.out.println("날짜 +- : " + validStart);
+
         // 시작일이 없을 경우 해당 달의 마지막부터 마이너스
+        YearMonth yearMonth = null;
         if(type == DateType.START){
+            yearMonth = yearMonth.of(end.getYear(),end.getMonth());
+            LocalDate monthEnd = yearMonth.atEndOfMonth();
             // 31일을 입력했는데, 28까지밖에없으면 이미 28로 등록됨으로 거기서 마이너스
-            return start.minusDays(validStart);
+            return monthEnd.atStartOfDay().minusDays(validStart);
         }// 마감일이 없을 경우 다음날부터 플러스
         else if(type == DateType.END){
-            return end.plusDays(validStart);
+            yearMonth = yearMonth.of(start.getYear(),start.getMonth());
+            LocalDate monthEnd = yearMonth.atEndOfMonth();
+            return monthEnd.atStartOfDay().plusDays(validStart);
         }
         return null;
     }
