@@ -29,7 +29,7 @@ public class TodoListManager {
     // fix: 마감일 입력받도록 수정
     public void addList(List<TodoList> todoList) {
         String title;
-        outerLoop1: while(true) {
+        outerLoop2: while(true) {
             title = getTitle("할일 추가");
             if (title == null) {
                 return;
@@ -39,7 +39,7 @@ public class TodoListManager {
             LocalDate startDate;
             LocalTime startTime;
 
-            outerLoop2: while(true){
+            outerLoop0: while(true){
                 boolean canCheckAfterD = false;
                 if(getConfirm("바쁨할일로")){
                     System.out.println("바쁨 할일은 마감기한이 필수입니다.");
@@ -1760,9 +1760,9 @@ public class TodoListManager {
         System.out.println("입력 마감 시간:" + currEnd);
         for(TodoList list : todoList){
             if(list.getBusy().equals(BusyType.BUSY_Y)){
-                LocalDateTime st = LocalDateTime.of(list.getDeadline(),
+                LocalDateTime ed = LocalDateTime.of(list.getDeadline(),
                         list.getDeadTime());
-                LocalDateTime ed =
+                LocalDateTime st =
                         LocalDateTime.of(list.getCheckStartDate(),
                                 list.getCheckStartTime());
                 System.out.println("기존 시작 날짜:" + st);
@@ -1797,9 +1797,9 @@ public class TodoListManager {
         for(RegularList lists : regulerList){
             for(TodoList list : lists.getTodoList()){
                 if(list.getBusy().equals(BusyType.BUSY_Y)){
-                    LocalDateTime st = LocalDateTime.of(list.getDeadline(),
+                    LocalDateTime ed = LocalDateTime.of(list.getDeadline(),
                             list.getDeadTime());
-                    LocalDateTime ed =
+                    LocalDateTime st =
                             LocalDateTime.of(list.getCheckStartDate(),
                                     list.getCheckStartTime());
                     System.out.println("기존 시작 날짜:" + st);

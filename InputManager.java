@@ -87,7 +87,7 @@ public class InputManager {
         if(today.isAfter(dateNow)){
             return true;
         }
-        if(today.isEqual(dateNow) && timeNow.isBefore(time)){
+        if(today.isEqual(dateNow) && (timeNow.isBefore(time) || timeNow.equals(time))){
             System.out.println(time + "보다 이전의 시간은 허용되지않습니다.");
             return false;
         }
@@ -107,7 +107,7 @@ public class InputManager {
         if(today.isBefore(dateNow)){
             return true;
         }
-        if(today.equals(dateNow) && time.isAfter(timeNow)){
+        if(today.equals(dateNow) && (time.isAfter(timeNow) || time.equals(timeNow))){
             System.out.println(timeNow + "보다 이후의 시간은 허용되지않습니다.");
             return false;
         }
