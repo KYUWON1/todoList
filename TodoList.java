@@ -4,11 +4,11 @@ import java.time.LocalTime;
 public class TodoList {
     private String title;
     private boolean isCheck;
-    private LocalDate deadline;
+    private DateResult deadline;
     // 요구사항 1A, 시각 설정 추가
     private LocalTime deadTime;
     // 요구사항 1C 체크 기한 제한
-    private LocalDate checkStartDate;
+    private DateResult checkStartDate;
     private LocalTime checkStartTime;
     // 요구사항 1B 마감 기한 공백 가능
     private boolean hasDeadline;
@@ -42,9 +42,9 @@ public class TodoList {
 
     public static TodoList titleAndDeadlineAndStartDayCAN(
             String title,
-            LocalDate date,
+            DateResult date,
             LocalTime time,
-            LocalDate startDate,
+            DateResult startDate,
             LocalTime startTime
     ){
         TodoList newTodo = new TodoList();
@@ -62,9 +62,9 @@ public class TodoList {
 
     public static TodoList titleAndDeadlineAndStartDayCANT(
             String title,
-            LocalDate date,
+            DateResult date,
             LocalTime time,
-            LocalDate startDate,
+            DateResult startDate,
             LocalTime startTime
     ){
         TodoList newTodo = new TodoList();
@@ -85,35 +85,38 @@ public class TodoList {
         return output;
     }
     public String showStartDate(){
-        String output = ". title: " + this.title + ", 마감일 : 미설정, 체크 가능 시작일 : " + this.checkStartDate + "일 " + this.checkStartTime + "분";
+        String output = ". title: " + this.title + ", 마감일 : 미설정, 체크 가능 시작일 : " + this.checkStartDate.getFormatDate() + "일 " + this.checkStartTime + "분";
         return output;
     }
     public String showDeadline(){
         String output =
-                ". title: " + this.title + ", 마감일 :" + this.deadline + "일 " + this.deadTime + "분, 체크 가능 시작일 : 미설정";
+                ". title: " + this.title + ", 마감일 :" + this.deadline.getFormatDate() + "일" +
+                        " " + this.deadTime + "분, 체크 가능 시작일 : 미설정";
         return output;
     }
     public String showDeadlineAndStartDate(){
         String output =
-                ". title: " + this.title + ", 마감일 :" + this.deadline + "일 " + this.deadTime + "분, 체크 가능 시작일 : " + this.checkStartDate + "일 " + this.checkStartTime + "분";
+                ". title: " + this.title + ", 마감일 :" + this.deadline.getFormatDate() + "일" +
+                        " " + this.deadTime + "분, 체크 가능 시작일 : " + this.checkStartDate.getFormatDate() + "일 " + this.checkStartTime + "분";
         return output;
     }
     public String showRegularListDetail(){
         String output = ". ";
         if(this.hasDeadline){
-            output += "마감일 : " + this.deadline + "일 " + this.deadTime + "분 ";
+            output += "마감일 : " + this.deadline.getFormatDate() + "일 " + this.deadTime +
+                    "분 ";
         }else{
             output += "마감일 : 미설정 ";
         }
         if(this.canCheckAfterCheckStartDate){
-            output += "시작일 : " + this.checkStartDate +"일 " + this.checkStartTime + "분 ";
+            output += "시작일 : " + this.checkStartDate.getFormatDate() +"일 " + this.checkStartTime + "분 ";
         }else{
             output += "시작일 : 미설정 ";
         }
         return output;
     }
 
-    public static TodoList titleAndCheckStartDate(String title, LocalDate startDate, LocalTime startTime) {
+    public static TodoList titleAndCheckStartDate(String title, DateResult startDate, LocalTime startTime) {
         TodoList newTodo = new TodoList();
         newTodo.setTitle(title);
         newTodo.setCheck(false);
@@ -125,7 +128,7 @@ public class TodoList {
         return newTodo;
     }
 
-    public static TodoList titleAndDeadlineCANT(String title, LocalDate deadlineDate, LocalTime deadlineTime) {
+    public static TodoList titleAndDeadlineCANT(String title, DateResult deadlineDate, LocalTime deadlineTime) {
         TodoList newTodo = new TodoList();
         newTodo.setTitle(title);
         newTodo.setDeadline(deadlineDate);
@@ -140,11 +143,11 @@ public class TodoList {
     public static TodoList createRegularList(
             String title,
             boolean hasDLine,
-            LocalDate deadline,
+            DateResult deadline,
             LocalTime deadTime,
             BusyType bType,
             boolean hasSLine,
-            LocalDate startline,
+            DateResult startline,
             LocalTime startTime,
             boolean canCheckAfterD
             ){
@@ -171,7 +174,7 @@ public class TodoList {
         return newTodo;
     }
 
-    public static TodoList titleAndDeadlineCAN(String title, LocalDate deadlineDate, LocalTime deadlineTime) {
+    public static TodoList titleAndDeadlineCAN(String title, DateResult deadlineDate, LocalTime deadlineTime) {
         TodoList newTodo = new TodoList();
         newTodo.setTitle(title);
         newTodo.setDeadline(deadlineDate);
@@ -191,11 +194,11 @@ public class TodoList {
         this.deadTime = deadTime;
     }
 
-    public LocalDate getCheckStartDate() {
+    public DateResult getCheckStartDate() {
         return checkStartDate;
     }
 
-    public void setCheckStartDate(LocalDate checkStartDate) {
+    public void setCheckStartDate(DateResult checkStartDate) {
         this.checkStartDate = checkStartDate;
     }
 
@@ -235,11 +238,11 @@ public class TodoList {
         this.title = title;
     }
 
-    public LocalDate getDeadline() {
+    public DateResult getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(LocalDate deadline) {
+    public void setDeadline(DateResult deadline) {
         this.deadline = deadline;
     }
 

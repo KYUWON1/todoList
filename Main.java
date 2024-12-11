@@ -196,10 +196,12 @@ public class Main {
             String check = todo.isCheck() ? "Y" : "N";
             String checkAfterDeadline = todo.isCanCheckAfterDeadline() ? "Y" : "N";
             String line = todo.getTitle() + "|"
-                    + (todo.getDeadline() != null ? todo.getDeadline() : "") + "|"
+                    + (todo.getDeadline() != null ? todo.getDeadline().getFormatDate() : "") + "|"
+                    + (todo.getDeadline() != null ? todo.getDeadline().getRawDate() : "") + "|"
                     + (todo.getDeadTime() != null ? todo.getDeadTime() : "") + "|"
                     + checkAfterDeadline + "|"
-                    + (todo.getCheckStartDate() != null ? todo.getCheckStartDate() : "") + "|"
+                    + (todo.getCheckStartDate() != null ? todo.getCheckStartDate().getFormatDate() : "") + "|"
+                    + (todo.getCheckStartDate() != null ? todo.getCheckStartDate().getRawDate() : "") + "|"
                     + (todo.getCheckStartTime() != null ? todo.getCheckStartTime() : "") + "|"
                     + check + "|"
                     + todo.getBusy();
@@ -214,10 +216,12 @@ public class Main {
                 String check = todo.isCheck() ? "Y" : "N";
                 String checkAfterDeadline = todo.isCanCheckAfterDeadline() ? "Y" : "N";
                 String line = todo.getTitle() + "|"
-                        + (todo.getDeadline() != null ? todo.getDeadline() : "") + "|"
+                        + (todo.getDeadline() != null ? todo.getDeadline().getFormatDate() : "") + "|"
+                        + (todo.getDeadline() != null ? todo.getDeadline().getRawDate() : "") + "|"
                         + (todo.getDeadTime() != null ? todo.getDeadTime() : "") + "|"
                         + checkAfterDeadline + "|"
-                        + (todo.getCheckStartDate() != null ? todo.getCheckStartDate() : "") + "|"
+                        + (todo.getCheckStartDate() != null ? todo.getCheckStartDate().getFormatDate() : "") + "|"
+                        + (todo.getCheckStartDate() != null ? todo.getCheckStartDate().getRawDate() : "") + "|"
                         + (todo.getCheckStartTime() != null ? todo.getCheckStartTime() : "") + "|"
                         + check + "|"
                         + todo.getBusy();
@@ -237,22 +241,27 @@ public class Main {
     /*
         parts[0]: 제목
         parts[1]: 마감일
-        parts[2]: 마감시간
-        parts[3]: 마감이후 체크 가능 여부
-        parts[4]: 체크 가능 일
-        parts[5]: 체크 가능 시간
-        parts[6]: 체크 여부 - Y : 체크, N : 미체크
+        parts[2]: 본 입력한 마감일
+        parts[3]: 마감시간
+        parts[4]: 마감이후 체크 가능 여부
+        parts[5]: 체크 가능 일
+        parts[6]: 본 입력한 체크가능일
+        parts[7]: 체크 가능 시간
+        parts[8]: 체크 여부 - Y : 체크, N : 미체크
+        parts[9]: 바쁨 여부
      */
     public static TodoList createList(String text) {
         String[] parts = text.split("\\|");
         String title = parts[0];
         String deadline = parts[1];
-        String deadTime = parts[2];
-        boolean isCheckAfterDeadline = "Y".equals(parts[3]);
-        String checkDate = parts[4];
-        String checkTime = parts[5];
-        boolean isCheck = "Y".equals(parts[6]);
-        BusyType bType = BusyType.valueOf(parts[7]);;
+        String rawEnd = parts[2];
+        String deadTime = parts[3];
+        boolean isCheckAfterDeadline = "Y".equals(parts[4]);
+        String checkDate = parts[5];
+        String rawStart = parts[6];
+        String checkTime = parts[7];
+        boolean isCheck = "Y".equals(parts[8]);
+        BusyType bType = BusyType.valueOf(parts[9]);
 
         LocalDate date1 = null;
         LocalTime time1 = null;
@@ -282,21 +291,25 @@ public class Main {
         // 마감일 o, 체크 시작/마감 x
         else if (date1 != null && date2 == null) {
             if (isCheckAfterDeadline) {
-                todo = TodoList.titleAndDeadlineCAN(title, date1, time1);
+                todo = TodoList.titleAndDeadlineCAN(title,
+                        new DateResult(rawEnd,date1), time1);
             } else {
-                todo = TodoList.titleAndDeadlineCANT(title, date1, time1);
+                todo = TodoList.titleAndDeadlineCANT(title, new DateResult(rawEnd,date1), time1);
             }
         }
         // 마감일 x, 체크 시작 o
         else if(date1 == null && date2 != null){
-            todo = TodoList.titleAndCheckStartDate(title, date2, time2);
+            todo = TodoList.titleAndCheckStartDate(title, new DateResult(rawStart,
+                    date2), time2);
         }
         // 마감일 o, 체크 시작/마감 o
         else {
             if (isCheckAfterDeadline) {
-                todo = TodoList.titleAndDeadlineAndStartDayCAN(title, date1, time1, date2, time2);
+                todo = TodoList.titleAndDeadlineAndStartDayCAN(title,
+                        new DateResult(rawEnd,date1), time1,
+                        new DateResult(rawStart,date2), time2);
             } else {
-                todo = TodoList.titleAndDeadlineAndStartDayCANT(title, date1, time1, date2, time2);
+                todo = TodoList.titleAndDeadlineAndStartDayCANT(title, new DateResult(rawEnd,date1), time1, new DateResult(rawStart,date2), time2);
             }
         }
         todo.setCheck(isCheck);
