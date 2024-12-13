@@ -1772,9 +1772,9 @@ public class TodoListManager {
                 rawStart = addMonthToString(rawStart);
             if(rawEnd != null)
                 rawEnd = addMonthToString(rawEnd);
-            if(rawStart == null)
+            if(rawStart == null && start != null)
                 start = start.plusMonths(1);
-            if(rawEnd == null)
+            if(rawEnd == null && end != null)
                 end = end.plusMonths(1);
         }
         return result;
