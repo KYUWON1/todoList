@@ -1739,7 +1739,8 @@ public class TodoListManager {
                     }
                     continue;
                 }
-                start = setDateByDays(validStart,start,end,DateType.START);
+                start = end.minusDays(startEndGap);
+                //start = setDateByDays(validStart,start,end,DateType.START);
                 System.out.println("조정된 시작날짜 :" + start);
             }
 
@@ -1756,7 +1757,8 @@ public class TodoListManager {
                     }
                     continue;
                 }
-                end = setDateByDays(validEnd,start,end,DateType.END);
+                end = start.plusDays(startEndGap);
+                //end = setDateByDays(validEnd,start,end,DateType.END);
                 System.out.println("조정된 마감날짜 :" + end);
             }
             if(validEnd == 0 && validStart == 0){
