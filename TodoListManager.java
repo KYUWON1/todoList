@@ -1759,7 +1759,9 @@ public class TodoListManager {
                 end = setDateByDays(validEnd,start,end,DateType.END);
                 System.out.println("조정된 마감날짜 :" + end);
             }
-
+            if(validEnd == 0 && validStart == 0){
+                start = end.minusDays(startEndGap);
+            }
             if(end != null && start != null){
                 if(list.getBusy() == BusyType.BUSY_Y){
                     // 이전회차와 검증
@@ -1860,13 +1862,13 @@ public class TodoListManager {
         // 시작일이 없을 경우 해당 달의 마지막부터 마이너스
         YearMonth yearMonth = null;
         if(type == DateType.START){
-            yearMonth = yearMonth.of(end.getYear(),end.getMonth());
+            yearMonth = yearMonth.of(start.getYear(),start.getMonth());
             LocalDate monthEnd = yearMonth.atEndOfMonth();
             // 31일을 입력했는데, 28까지밖에없으면 이미 28로 등록됨으로 거기서 마이너스
             return monthEnd.atStartOfDay().minusDays(validStart);
         }// 마감일이 없을 경우 다음날부터 플러스
         else if(type == DateType.END){
-            yearMonth = yearMonth.of(start.getYear(),start.getMonth());
+            yearMonth = yearMonth.of(end.getYear(),end.getMonth());
             LocalDate monthEnd = yearMonth.atEndOfMonth();
             return monthEnd.atStartOfDay().plusDays(validStart);
         }
